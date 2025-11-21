@@ -1,0 +1,205 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum DayOfWeek {
+  SATURDAY
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+}
+
+enum BloodType {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+enum UserRole {
+  DOCTOR
+  PATIENT
+  ADMIN
+}
+
+// Models
+model User {
+  id              String      @id @default(uuid())
+  email           String      @unique
+  password        String
+  firstName       String
+  lastName        String
+  phone           String
+  bio             String?
+  role            UserRole
+  specialtyId     String?
+  
+  // Relations
+  specialty       Specialty?  @relation(fields: [specialtyId], references: [id])
+  clinicLocation  ClinicLocation?
+  certificates    Certificate[]
+  clinicImages    ClinicImage[]
+  schedules       DoctorSchedule[]
+  patients        Patient[]    @relation("DoctorPatients")
+  reviews         Review[]     @relation("DoctorReviews")
+  givenReviews    Review[]     @relation("UserReviews")
+  
+  // Profile Status
+  profileComplete Boolean     @default(false)
+  
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Specialty {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  icon      String?
+  users     User[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+}
+
+model ClinicLocation {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address     String
+  latitude    Float
+  longitude   Float
+  city        String
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Certificate {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  institution String
+  year         Int
+  imageUrl     String
+  
+  // Timestamps
+  createdAt    DateTime @default(now())
+  
+  @@index([userId])
+}
+
+model ClinicImage {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageUrl     String
+  caption      String?
+  isPrimary    Boolean  @default(false)
+  displayOrder Int      @default(0)
+  
+  // Timestamps
+  createdAt    DateTime @default(now())
+  
+  @@index([userId])
+}
+
+model DoctorSchedule {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayOfWeek    DayOfWeek
+  startTime    DateTime
+  endTime      DateTime
+  slotDuration Int      @default(30) // in minutes
+  isActive     Boolean  @default(true)
+  
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model Patient {
+  id             String    @id @default(uuid())
+  doctorUserId   String
+  doctor         User      @relation("DoctorPatients", fields: [doctorUserId], references: [id], onDelete: Cascade)
+  fullName       String
+  dateOfBirth    DateTime
+  gender         Gender
+  phone          String
+  bloodType      BloodType?
+  allergies      String?
+  medicalHistory String?
+  
+  // Relations
+  visits         Visit[]
+  
+  // Timestamps
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  @@index([doctorUserId])
+}
+
+model Visit {
+  id              String   @id @default(uuid())
+  patientId       String
+  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  visitDate       DateTime
+  diagnosis       String?
+  treatment       String?
+  prescription    String?
+  consultationFee Float
+  paidAmount      Float
+  notes           String?
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([patientId])
+}
+
+model Review {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
+  doctorUserId String
+  doctor       User     @relation("DoctorReviews", fields: [doctorUserId], references: [id], onDelete: Cascade)
+  rating       Int
+  comment      String?
+  isVerified   Boolean  @default(false)
+  
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([doctorUserId])
+}
