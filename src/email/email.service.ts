@@ -1,32 +1,33 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private resend: Resend;
+  private transporter: nodemailer.Transporter;
 
   constructor(private configService: ConfigService) {
-    const apiKey = this.configService.get<string>('RESEND_API_KEY');
-    if (!apiKey) {
-      this.logger.error('RESEND_API_KEY is not defined');
-    }
-    this.resend = new Resend(apiKey);
+    this.transporter = nodemailer.createTransport({
+      host: this.configService.get('SMTP_HOST'),
+      port: parseInt(this.configService.get('SMTP_PORT') || '587'),
+      secure: this.configService.get('SMTP_SECURE') === 'true',
+      auth: {
+        user: this.configService.get('SMTP_USER'),
+        pass: this.configService.get('SMTP_PASSWORD'),
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
   }
 
   async sendOtpEmail(to: string, otp: string): Promise<void> {
-    const from = this.configService.get<string>(
-      'EMAIL_FROM',
-      'onboarding@resend.dev',
-    );
-
-    try {
-      await this.resend.emails.send({
-        from,
-        to,
-        subject: 'Your OTP for Doctor Registration',
-        html: `
+    const mailOptions = {
+      from: `"${this.configService.get('SMTP_FROM_NAME')}" <${this.configService.get('SMTP_FROM_EMAIL')}>`,
+      to,
+      subject: 'Your OTP for Doctor Registration',
+      html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2c3e50; text-align: center;">Your Verification Code</h2>
           <p>Hello,</p>
@@ -42,12 +43,14 @@ export class EmailService {
           </p>
         </div>
       `,
-      });
+    };
 
-      this.logger.log(`OTP email sent to ${to}`);
+    try {
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`OTP email sent to ${to}, Message ID: ${info.messageId}`);
     } catch (error) {
       this.logger.error(`Failed to send OTP email to ${to}:`, error);
-      throw new Error('Failed to send OTP email');
+      throw new Error(`Failed to send OTP email: ${error.message}`);
     }
   }
 }

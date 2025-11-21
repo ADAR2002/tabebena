@@ -29,9 +29,9 @@ export declare class AuthService {
     validateUser(email: string, password: string): Promise<any>;
     getUserProfile(userId: string): Promise<({
         specialty: {
+            name: string;
             id: string;
             createdAt: Date;
-            name: string;
             icon: string | null;
         } | null;
         certificates: {
@@ -71,9 +71,9 @@ export declare class AuthService {
         clinicImages?: any[];
     }): Promise<{
         specialty: {
+            name: string;
             id: string;
             createdAt: Date;
-            name: string;
             icon: string | null;
         } | null;
         certificates: {

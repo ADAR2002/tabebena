@@ -21,9 +21,9 @@ export declare class AuthController {
     }>;
     getProfile(req: any): Promise<({
         specialty: {
+            name: string;
             id: string;
             createdAt: Date;
-            name: string;
             icon: string | null;
         } | null;
         certificates: {
