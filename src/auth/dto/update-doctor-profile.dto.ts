@@ -1,13 +1,21 @@
-import { IsOptional, IsString, IsArray, IsUrl } from 'class-validator';
+import { IsOptional, IsString, IsArray, IsUrl, IsNumber, IsInt, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateDoctorProfileDto {
-  @ApiProperty({ required: false, description: 'Biography of the doctor' })
+  @ApiProperty({ 
+    required: false, 
+    description: 'Biography of the doctor',
+    example: 'Experienced cardiologist with 10+ years of practice'
+  })
   @IsOptional()
   @IsString()
   bio?: string;
 
-  @ApiProperty({ required: false, description: 'ID of the specialty' })
+  @ApiProperty({ 
+    required: false, 
+    description: 'ID of the specialty',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
   @IsOptional()
   @IsString()
   specialtyId?: string;
@@ -30,13 +38,36 @@ export class UpdateDoctorProfileDto {
   @IsOptional()
   clinicImages?: any[];
 
-  @ApiProperty({ required: false, description: 'Consultation fee' })
+  @ApiProperty({ 
+    required: false, 
+    description: 'Consultation fee in local currency',
+    example: 150.50,
+    minimum: 0
+  })
   @IsOptional()
-  @IsString()
-  consultationFee?: string;
+  @IsNumber()
+  @Min(0)
+  consultationFee?: number;
 
-  @ApiProperty({ required: false, description: 'Years of experience' })
+  @ApiProperty({ 
+    required: false, 
+    description: 'Years of experience',
+    example: 5,
+    minimum: 0,
+    maximum: 100
+  })
   @IsOptional()
-  @IsString()
-  experienceYears?: string;
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  experienceYears?: number;
+
+  @ApiProperty({ 
+    required: false, 
+    description: 'URL of the profile photo',
+    example: 'https://example.com/profile.jpg'
+  })
+  @IsOptional()
+  @IsUrl()
+  profilePhotoUrl?: string;
 }

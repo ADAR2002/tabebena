@@ -19,18 +19,16 @@ const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 const otp_request_dto_1 = require("./dto/otp-request.dto");
 const auth_credentials_dto_1 = require("./dto/auth-credentials.dto");
 const swagger_decorators_1 = require("./decorators/swagger.decorators");
+const swagger_1 = require("@nestjs/swagger");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
     }
-    async requestOtp(requestOtpDto) {
-        if (!requestOtpDto.isDoctor) {
-            throw new common_1.UnauthorizedException('OTP verification is only required for doctors');
-        }
-        return this.authService.requestOtp(requestOtpDto.email, requestOtpDto.isDoctor);
+    async requestOtp(body) {
+        return this.authService.requestOtp(body.email);
     }
-    async verifyOtpAndSignUp(email, otp, userDetails) {
+    async verifyOtpAndSignUp(email, token, otp, userDetails) {
         if (email !== userDetails.email) {
             throw new common_1.UnauthorizedException('Email in OTP verification does not match user details');
         }
@@ -46,11 +44,17 @@ let AuthController = class AuthController {
         const user = await this.authService.getUserProfile(req.user.userId);
         return user;
     }
+    async setProfileComplete(req, profileComplete) {
+        return this.authService.setDoctorProfileComplete(req.user.userId, profileComplete);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.Post)('request-otp'),
-    (0, swagger_decorators_1.RequestOtpDoc)(),
+    (0, common_1.Post)('otp/request'),
+    (0, swagger_1.ApiOperation)({ summary: 'Request OTP for login/registration' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'OTP sent successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiBody)({ type: otp_request_dto_1.RequestOtpDto }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [otp_request_dto_1.RequestOtpDto]),
@@ -60,10 +64,11 @@ __decorate([
     (0, common_1.Post)('verify-otp'),
     (0, swagger_decorators_1.VerifyOtpAndSignUpDoc)(),
     __param(0, (0, common_1.Body)('email')),
-    __param(1, (0, common_1.Body)('otp')),
-    __param(2, (0, common_1.Body)('userDetails')),
+    __param(1, (0, common_1.Body)('token')),
+    __param(2, (0, common_1.Body)('otp')),
+    __param(3, (0, common_1.Body)('userDetails')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, auth_credentials_dto_1.RegisterCredentialsDto]),
+    __metadata("design:paramtypes", [String, String, String, auth_credentials_dto_1.RegisterCredentialsDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyOtpAndSignUp", null);
 __decorate([
@@ -91,6 +96,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Patch)('doctor/profile-complete'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)('profileComplete')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Boolean]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "setProfileComplete", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_decorators_1.ApiTagsAuth)(),
     (0, common_1.Controller)('auth'),

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get, Request, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, UnauthorizedException, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RequestOtpDto } from './dto/otp-request.dto';
@@ -12,25 +12,27 @@ import {
   GetProfileDoc, 
   CheckAuthDoc 
 } from './decorators/swagger.decorators';
+import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTagsAuth()
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post('request-otp')
-  @RequestOtpDoc()
-  async requestOtp(@Body() requestOtpDto: RequestOtpDto) {
-    if (!requestOtpDto.isDoctor) {
-      throw new UnauthorizedException('OTP verification is only required for doctors');
-    }
-    return this.authService.requestOtp(requestOtpDto.email, requestOtpDto.isDoctor);
+  @Post('otp/request')
+  @ApiOperation({ summary: 'Request OTP for login/registration' })
+  @ApiResponse({ status: 201, description: 'OTP sent successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiBody({ type: RequestOtpDto })
+  async requestOtp(@Body() body: RequestOtpDto) {
+    return this.authService.requestOtp(body.email);
   }
 
   @Post('verify-otp')
   @VerifyOtpAndSignUpDoc()
   async verifyOtpAndSignUp(
     @Body('email') email: string,
+    @Body('token') token: string,
     @Body('otp') otp: string,
     @Body('userDetails') userDetails: RegisterCredentialsDto
   ) {
@@ -61,5 +63,14 @@ export class AuthController {
   async getProfile(@Request() req) {
     const user = await this.authService.getUserProfile(req.user.userId);
     return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('doctor/profile-complete')
+  async setProfileComplete(
+    @Request() req,
+    @Body('profileComplete') profileComplete: boolean,
+  ) {
+    return this.authService.setDoctorProfileComplete(req.user.userId, profileComplete);
   }
 }

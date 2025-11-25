@@ -7,6 +7,7 @@ import {
   ApiTags,
   ApiParam,
   ApiQuery,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import {
   LoginCredentialsDto,
@@ -281,6 +282,75 @@ export const GetProfileDoc = () =>
     }),
     ApiResponse({ status: 404, description: 'لم يتم العثور على المستخدم' }),
     ApiResponse({ status: 500, description: 'خطأ في الخادم الداخلي' }),
+  );
+
+export const UpdateDoctorProfileDoc = () =>
+  applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({
+      summary: 'تحديث ملف الطبيب الشخصي',
+      description: 'تحديث معلومات ملف الطبيب الشخصي بما في ذلك الشهادات وصور العيادة',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'تم تحديث الملف الشخصي بنجاح',
+      schema: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          email: { type: 'string' },
+          firstName: { type: 'string' },
+          lastName: { type: 'string' },
+          phone: { type: 'string' },
+          bio: { type: 'string', nullable: true },
+          role: { type: 'string', enum: ['DOCTOR'] },
+          profileComplete: { type: 'boolean' },
+          consultationFee: { type: 'number', nullable: true },
+          experienceYears: { type: 'number', nullable: true },
+          profilePhotoUrl: { type: 'string', nullable: true },
+          specialty: {
+            type: 'object',
+            nullable: true,
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              icon: { type: 'string', nullable: true },
+            },
+          },
+          certificates: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                title: { type: 'string' },
+                institution: { type: 'string' },
+                year: { type: 'number' },
+                imageUrl: { type: 'string' },
+              },
+            },
+          },
+          clinicImages: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                imageUrl: { type: 'string' },
+                caption: { type: 'string', nullable: true },
+                isPrimary: { type: 'boolean' },
+                displayOrder: { type: 'number' },
+              },
+            },
+          },
+        },
+      },
+    }),
+    ApiResponse({ status: 400, description: 'بيانات الطلب غير صالحة' }),
+    ApiResponse({ status: 401, description: 'غير مصرح به - يلزم تسجيل الدخول' }),
+    ApiResponse({ status: 403, description: 'ممنوع - يجب أن تكون طبيباً' }),
+    ApiResponse({ status: 500, description: 'خطأ في الخادم الداخلي' }),
+    ApiConsumes('multipart/form-data'),
   );
 
 export const CheckAuthDoc = () =>

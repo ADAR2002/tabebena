@@ -68,6 +68,9 @@ model User {
   
   // Profile Status
   profileComplete Boolean     @default(false)
+  consultationFee Float?
+  experienceYears Int?
+  profilePhotoUrl String?
   
   // Timestamps
   createdAt       DateTime    @default(now())

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CheckAuthDoc = exports.GetProfileDoc = exports.SignInDoc = exports.SignUpDoc = exports.VerifyOtpAndSignUpDoc = exports.RequestOtpDoc = exports.ApiTagsAuth = void 0;
+exports.CheckAuthDoc = exports.UpdateDoctorProfileDoc = exports.GetProfileDoc = exports.SignInDoc = exports.SignUpDoc = exports.VerifyOtpAndSignUpDoc = exports.RequestOtpDoc = exports.ApiTagsAuth = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const auth_credentials_dto_1 = require("../dto/auth-credentials.dto");
@@ -228,6 +228,65 @@ const GetProfileDoc = () => (0, common_1.applyDecorators)((0, swagger_1.ApiBeare
     description: 'غير مصرح به - يلزم تسجيل الدخول',
 }), (0, swagger_1.ApiResponse)({ status: 404, description: 'لم يتم العثور على المستخدم' }), (0, swagger_1.ApiResponse)({ status: 500, description: 'خطأ في الخادم الداخلي' }));
 exports.GetProfileDoc = GetProfileDoc;
+const UpdateDoctorProfileDoc = () => (0, common_1.applyDecorators)((0, swagger_1.ApiBearerAuth)('JWT-auth'), (0, swagger_1.ApiOperation)({
+    summary: 'تحديث ملف الطبيب الشخصي',
+    description: 'تحديث معلومات ملف الطبيب الشخصي بما في ذلك الشهادات وصور العيادة',
+}), (0, swagger_1.ApiResponse)({
+    status: 200,
+    description: 'تم تحديث الملف الشخصي بنجاح',
+    schema: {
+        type: 'object',
+        properties: {
+            id: { type: 'string' },
+            email: { type: 'string' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string' },
+            phone: { type: 'string' },
+            bio: { type: 'string', nullable: true },
+            role: { type: 'string', enum: ['DOCTOR'] },
+            profileComplete: { type: 'boolean' },
+            consultationFee: { type: 'number', nullable: true },
+            experienceYears: { type: 'number', nullable: true },
+            profilePhotoUrl: { type: 'string', nullable: true },
+            specialty: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    icon: { type: 'string', nullable: true },
+                },
+            },
+            certificates: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string' },
+                        title: { type: 'string' },
+                        institution: { type: 'string' },
+                        year: { type: 'number' },
+                        imageUrl: { type: 'string' },
+                    },
+                },
+            },
+            clinicImages: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string' },
+                        imageUrl: { type: 'string' },
+                        caption: { type: 'string', nullable: true },
+                        isPrimary: { type: 'boolean' },
+                        displayOrder: { type: 'number' },
+                    },
+                },
+            },
+        },
+    },
+}), (0, swagger_1.ApiResponse)({ status: 400, description: 'بيانات الطلب غير صالحة' }), (0, swagger_1.ApiResponse)({ status: 401, description: 'غير مصرح به - يلزم تسجيل الدخول' }), (0, swagger_1.ApiResponse)({ status: 403, description: 'ممنوع - يجب أن تكون طبيباً' }), (0, swagger_1.ApiResponse)({ status: 500, description: 'خطأ في الخادم الداخلي' }), (0, swagger_1.ApiConsumes)('multipart/form-data'));
+exports.UpdateDoctorProfileDoc = UpdateDoctorProfileDoc;
 const CheckAuthDoc = () => (0, common_1.applyDecorators)((0, swagger_1.ApiBearerAuth)('JWT-auth'), (0, swagger_1.ApiOperation)({
     summary: 'التحقق من حالة المصادقة',
     description: 'التحقق مما إذا كان رمز JWT الحالي صالحاً وإرجاع معلومات المستخدم الأساسية.',

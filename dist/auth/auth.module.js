@@ -15,8 +15,7 @@ const auth_service_1 = require("./auth.service");
 const auth_controller_1 = require("./auth.controller");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const constants_1 = require("./constants");
-const otp_module_1 = require("./otp/otp.module");
-const email_module_1 = require("../email/email.module");
+const supabase_module_1 = require("../supabase/supabase.module");
 const config_1 = require("@nestjs/config");
 let AuthModule = class AuthModule {
 };
@@ -26,8 +25,7 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             config_1.ConfigModule,
             prisma_module_1.PrismaModule,
-            otp_module_1.OtpModule,
-            email_module_1.EmailModule,
+            supabase_module_1.SupabaseModule,
             passport_1.PassportModule.register({ defaultStrategy: 'jwt' }),
             jwt_1.JwtModule.register({
                 secret: constants_1.JWT_SECRET,

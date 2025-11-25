@@ -19,16 +19,25 @@ class UpdateDoctorProfileDto {
     clinicImages;
     consultationFee;
     experienceYears;
+    profilePhotoUrl;
 }
 exports.UpdateDoctorProfileDto = UpdateDoctorProfileDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ required: false, description: 'Biography of the doctor' }),
+    (0, swagger_1.ApiProperty)({
+        required: false,
+        description: 'Biography of the doctor',
+        example: 'Experienced cardiologist with 10+ years of practice'
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateDoctorProfileDto.prototype, "bio", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ required: false, description: 'ID of the specialty' }),
+    (0, swagger_1.ApiProperty)({
+        required: false,
+        description: 'ID of the specialty',
+        example: '550e8400-e29b-41d4-a716-446655440000'
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -54,15 +63,39 @@ __decorate([
     __metadata("design:type", Array)
 ], UpdateDoctorProfileDto.prototype, "clinicImages", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ required: false, description: 'Consultation fee' }),
+    (0, swagger_1.ApiProperty)({
+        required: false,
+        description: 'Consultation fee in local currency',
+        example: 150.50,
+        minimum: 0
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
 ], UpdateDoctorProfileDto.prototype, "consultationFee", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ required: false, description: 'Years of experience' }),
+    (0, swagger_1.ApiProperty)({
+        required: false,
+        description: 'Years of experience',
+        example: 5,
+        minimum: 0,
+        maximum: 100
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(100),
+    __metadata("design:type", Number)
 ], UpdateDoctorProfileDto.prototype, "experienceYears", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        required: false,
+        description: 'URL of the profile photo',
+        example: 'https://example.com/profile.jpg'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUrl)(),
+    __metadata("design:type", String)
+], UpdateDoctorProfileDto.prototype, "profilePhotoUrl", void 0);
 //# sourceMappingURL=update-doctor-profile.dto.js.map

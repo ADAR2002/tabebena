@@ -49,85 +49,98 @@ const bcrypt = __importStar(require("bcrypt"));
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
 const constants_1 = require("./constants");
-const otp_service_1 = require("./otp/otp.service");
-const email_service_1 = require("../email/email.service");
+const supabase_service_1 = require("../supabase/supabase.service");
 let AuthService = class AuthService {
-    prisma;
     jwtService;
-    otpService;
-    emailService;
-    constructor(prisma, jwtService, otpService, emailService) {
-        this.prisma = prisma;
+    supabaseService;
+    prisma;
+    constructor(jwtService, supabaseService, prisma) {
         this.jwtService = jwtService;
-        this.otpService = otpService;
-        this.emailService = emailService;
+        this.supabaseService = supabaseService;
+        this.prisma = prisma;
     }
-    async requestOtp(email, isDoctor) {
+    async signUp(registerCredentialsDto) {
+        const { email, password, firstName, lastName, phone, isDoctor } = registerCredentialsDto;
         const existingUser = await this.prisma.user.findUnique({
             where: { email },
         });
         if (existingUser) {
-            throw new common_1.ConflictException('User with this email already exists');
+            throw new common_1.ConflictException("User with this email already exists");
         }
-        const otp = this.otpService.generateOtp(email);
-        await this.emailService.sendOtpEmail(email, otp);
-        return { message: 'OTP sent successfully' };
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const user = await this.prisma.user.create({
+            data: {
+                email,
+                password: hashedPassword,
+                firstName,
+                lastName,
+                phone,
+                role: isDoctor ? client_1.UserRole.DOCTOR : client_1.UserRole.PATIENT,
+            },
+        });
+        const payload = { email: user.email, sub: user.id, role: user.role };
+        const accessToken = this.jwtService.sign(payload, {
+            secret: constants_1.JWT_SECRET,
+            expiresIn: constants_1.JWT_EXPIRES_IN,
+        });
+        return { accessToken, user: user };
+    }
+    async requestOtp(email) {
+        try {
+            await this.supabaseService.sendOtp(email);
+            return { message: "OTP sent successfully" };
+        }
+        catch (error) {
+            throw new Error(`Failed to send OTP: ${error.message}`);
+        }
     }
     async verifyOtpAndCreateUser(verifyOtpDto, registerCredentialsDto) {
         const { email, otp } = verifyOtpDto;
         const { password, firstName, lastName, phone, isDoctor } = registerCredentialsDto;
-        const isValidOtp = this.otpService.verifyOtp(email, otp);
-        if (!isValidOtp) {
-            throw new common_1.UnauthorizedException('Invalid or expired OTP');
-        }
+        const { accessToken, user } = await this.verifyOtp(email, otp);
         const existingUser = await this.prisma.user.findUnique({
             where: { email },
         });
         if (existingUser) {
-            throw new common_1.ConflictException('User with this email already exists');
+            throw new common_1.ConflictException("User with this email already exists");
         }
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
-        const user = await this.prisma.user.create({
+        const createdUser = await this.prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
                 firstName,
                 lastName,
                 phone,
-                role: isDoctor ? 'DOCTOR' : 'PATIENT',
+                role: isDoctor ? "DOCTOR" : "PATIENT",
             },
         });
-        const payload = { email: user.email, sub: user.id, role: user.role };
-        const accessToken = this.jwtService.sign(payload);
-        return { accessToken, user };
+        return { accessToken, user: createdUser };
     }
-    async signUp(registerCredentialsDto) {
-        const { email, password, firstName, lastName, phone, isDoctor } = registerCredentialsDto;
-        if (isDoctor) {
-            throw new common_1.ConflictException('Doctors must use the OTP verification flow');
+    async verifyOtp(email, token) {
+        try {
+            const { session } = await this.supabaseService.verifyOtp(email, token);
+            if (!session) {
+                throw new common_1.UnauthorizedException('Invalid or expired OTP');
+            }
+            const payload = {
+                email: session.user.email,
+                sub: session.user.id,
+            };
+            const accessToken = this.jwtService.sign(payload);
+            return {
+                accessToken,
+                user: {
+                    id: session.user.id,
+                    email: session.user.email,
+                },
+            };
         }
-        const existingUser = await this.prisma.user.findUnique({
-            where: { email },
-        });
-        if (existingUser) {
-            throw new common_1.ConflictException('User with this email already exists');
+        catch (error) {
+            throw new Error(`OTP verification failed: ${error.message}`);
         }
-        const salt = await bcrypt.genSalt();
-        const hashedPassword = await bcrypt.hash(password, salt);
-        const user = await this.prisma.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-                firstName,
-                lastName,
-                phone,
-                role: 'PATIENT',
-            },
-        });
-        const payload = { email: user.email, sub: user.id, role: user.role };
-        const accessToken = this.jwtService.sign(payload);
-        return { accessToken, user };
     }
     async signIn(loginCredentialsDto) {
         const { email, password } = loginCredentialsDto;
@@ -135,7 +148,7 @@ let AuthService = class AuthService {
             where: { email },
         });
         if (!user || !(await bcrypt.compare(password, user.password))) {
-            throw new common_1.UnauthorizedException('Invalid credentials');
+            throw new common_1.UnauthorizedException("Invalid credentials");
         }
         const payload = { email: user.email, sub: user.id, role: user.role };
         const accessToken = this.jwtService.sign(payload, {
@@ -160,10 +173,10 @@ let AuthService = class AuthService {
             include: {
                 specialty: true,
                 certificates: {
-                    orderBy: { createdAt: 'desc' },
+                    orderBy: { createdAt: "desc" },
                 },
                 clinicImages: {
-                    orderBy: { displayOrder: 'asc' },
+                    orderBy: { displayOrder: "asc" },
                 },
             },
         });
@@ -173,11 +186,9 @@ let AuthService = class AuthService {
             where: { id: userId },
         });
         if (!user || user.role !== client_1.UserRole.DOCTOR) {
-            throw new common_1.UnauthorizedException('Only doctors can update profile');
+            throw new common_1.UnauthorizedException("Only doctors can update profile");
         }
-        const updateData = {
-            profileComplete: true,
-        };
+        const updateData = {};
         if (updateProfileDto.bio)
             updateData.bio = updateProfileDto.bio;
         if (updateProfileDto.consultationFee)
@@ -194,7 +205,7 @@ let AuthService = class AuthService {
             updateData.certificates = {
                 create: files.certificates.map((file) => ({
                     title: file.originalname,
-                    institution: 'Unknown Institution',
+                    institution: "Unknown Institution",
                     year: new Date().getFullYear(),
                     imageUrl: `certificates/${file.filename}`,
                 })),
@@ -205,8 +216,8 @@ let AuthService = class AuthService {
             await this.prisma.certificate.deleteMany({ where: { userId } });
             updateData.certificates = {
                 create: updateProfileDto.certificates.map((url) => ({
-                    title: url.split('/').pop() || 'Certificate',
-                    institution: 'Unknown Institution',
+                    title: url.split("/").pop() || "Certificate",
+                    institution: "Unknown Institution",
                     year: new Date().getFullYear(),
                     imageUrl: url,
                 })),
@@ -219,7 +230,7 @@ let AuthService = class AuthService {
                     imageUrl: `clinic-images/${file.filename}`,
                     caption: file.originalname,
                     isPrimary: false,
-                    displayOrder: 0
+                    displayOrder: 0,
                 })),
             };
         }
@@ -229,11 +240,30 @@ let AuthService = class AuthService {
             updateData.clinicImages = {
                 create: updateProfileDto.clinicImages.map((url) => ({
                     imageUrl: url,
-                    caption: url.split('/').pop() || 'Clinic Image',
+                    caption: url.split("/").pop() || "Clinic Image",
                     isPrimary: false,
-                    displayOrder: 0
+                    displayOrder: 0,
                 })),
             };
+        }
+        if (files?.profilePhoto && files.profilePhoto.length > 0) {
+            const file = files.profilePhoto[0];
+            updateData.profilePhotoUrl = `profile-photos/${file.filename}`;
+        }
+        else if (updateProfileDto.profilePhotoUrl) {
+            updateData.profilePhotoUrl = updateProfileDto.profilePhotoUrl;
+        }
+        const hasBio = updateProfileDto.bio || user.bio;
+        const hasSpecialty = updateProfileDto.specialtyId || user.specialtyId;
+        const hasConsultationFee = updateProfileDto.consultationFee || user.consultationFee;
+        const hasExperienceYears = updateProfileDto.experienceYears || user.experienceYears;
+        const hasProfilePhoto = updateData.profilePhotoUrl || user.profilePhotoUrl;
+        if (hasBio &&
+            hasSpecialty &&
+            hasConsultationFee &&
+            hasExperienceYears &&
+            hasProfilePhoto) {
+            updateData.profileComplete = true;
         }
         return this.prisma.user.update({
             where: { id: userId },
@@ -245,13 +275,24 @@ let AuthService = class AuthService {
             },
         });
     }
+    async setDoctorProfileComplete(userId, profileComplete) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+        if (!user || user.role !== client_1.UserRole.DOCTOR) {
+            throw new common_1.UnauthorizedException("Only doctors can update profile");
+        }
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: { profileComplete },
+        });
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        jwt_1.JwtService,
-        otp_service_1.OtpService,
-        email_service_1.EmailService])
+    __metadata("design:paramtypes", [jwt_1.JwtService,
+        supabase_service_1.SupabaseService,
+        prisma_service_1.PrismaService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

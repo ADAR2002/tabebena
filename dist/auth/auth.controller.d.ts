@@ -4,10 +4,10 @@ import { LoginCredentialsDto, RegisterCredentialsDto } from './dto/auth-credenti
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
-    requestOtp(requestOtpDto: RequestOtpDto): Promise<{
+    requestOtp(body: RequestOtpDto): Promise<{
         message: string;
     }>;
-    verifyOtpAndSignUp(email: string, otp: string, userDetails: RegisterCredentialsDto): Promise<{
+    verifyOtpAndSignUp(email: string, token: string, otp: string, userDetails: RegisterCredentialsDto): Promise<{
         accessToken: string;
         user: import("@prisma/client").User;
     }>;
@@ -46,16 +46,36 @@ export declare class AuthController {
         }[];
     } & {
         email: string;
+        phone: string;
+        id: string;
         password: string;
         firstName: string;
         lastName: string;
-        phone: string;
-        specialtyId: string | null;
         bio: string | null;
-        id: string;
         role: import("@prisma/client").$Enums.UserRole;
+        specialtyId: string | null;
         profileComplete: boolean;
+        consultationFee: number | null;
+        experienceYears: number | null;
+        profilePhotoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
     }) | null>;
+    setProfileComplete(req: any, profileComplete: boolean): Promise<{
+        email: string;
+        phone: string;
+        id: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        bio: string | null;
+        role: import("@prisma/client").$Enums.UserRole;
+        specialtyId: string | null;
+        profileComplete: boolean;
+        consultationFee: number | null;
+        experienceYears: number | null;
+        profilePhotoUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
 }

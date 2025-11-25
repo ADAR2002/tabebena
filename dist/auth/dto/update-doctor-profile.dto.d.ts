@@ -3,6 +3,7 @@ export declare class UpdateDoctorProfileDto {
     specialtyId?: string;
     certificates?: any[];
     clinicImages?: any[];
-    consultationFee?: string;
-    experienceYears?: string;
+    consultationFee?: number;
+    experienceYears?: number;
+    profilePhotoUrl?: string;
 }
