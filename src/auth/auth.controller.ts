@@ -1,18 +1,20 @@
-import { Controller, Post, Body, UseGuards, Get, Request, UnauthorizedException, Patch } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, UnauthorizedException, Patch, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RequestOtpDto } from './dto/otp-request.dto';
 import { LoginCredentialsDto, RegisterCredentialsDto } from './dto/auth-credentials.dto';
 import { 
   ApiTagsAuth, 
-  RequestOtpDoc, 
   VerifyOtpAndSignUpDoc, 
   SignUpDoc, 
   SignInDoc, 
   GetProfileDoc, 
-  CheckAuthDoc 
+  UpdateDoctorProfileDoc, 
+  RequestOtpDoc
 } from './decorators/swagger.decorators';
-import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { UpdateDoctorProfileDto } from './dto/update-doctor-profile.dto';
+
 
 @ApiTagsAuth()
 @Controller('auth')
@@ -20,10 +22,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('otp/request')
-  @ApiOperation({ summary: 'Request OTP for login/registration' })
-  @ApiResponse({ status: 201, description: 'OTP sent successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiBody({ type: RequestOtpDto })
+  @RequestOtpDoc()
   async requestOtp(@Body() body: RequestOtpDto) {
     return this.authService.requestOtp(body.email);
   }
@@ -32,7 +31,6 @@ export class AuthController {
   @VerifyOtpAndSignUpDoc()
   async verifyOtpAndSignUp(
     @Body('email') email: string,
-    @Body('token') token: string,
     @Body('otp') otp: string,
     @Body('userDetails') userDetails: RegisterCredentialsDto
   ) {
@@ -60,9 +58,39 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   @GetProfileDoc()
-  async getProfile(@Request() req) {
-    const user = await this.authService.getUserProfile(req.user.userId);
-    return user;
+  async getUserProfile(@Request() req) {
+    return this.authService.getUserProfile(req.user.userId);
+  }
+
+  @Patch('doctor/profile')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'profilePhoto', maxCount: 1 },
+      { name: 'certificates', maxCount: 10 },
+      { name: 'clinicImages', maxCount: 10 },
+    ])
+  )
+  @UpdateDoctorProfileDoc()
+  
+  async updateDoctorProfile(
+    @Request() req,
+    @Body() updateProfileDto: UpdateDoctorProfileDto,
+    @UploadedFiles() files: {
+      profilePhoto?: File[];
+      certificates?: File[];
+      clinicImages?: File[];
+    } = {}
+  ) {
+    return this.authService.updateDoctorProfile(
+      req.user.userId,
+      updateProfileDto,
+      {
+        profilePhoto: files?.profilePhoto,
+        certificates: files?.certificates,
+        clinicImages: files?.clinicImages,
+      }
+    );
   }
 
   @UseGuards(JwtAuthGuard)

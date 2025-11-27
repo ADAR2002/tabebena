@@ -2,14 +2,6 @@ import { OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseClient } from '@supabase/supabase-js';
 import type { EmailOtpType } from '@supabase/supabase-js';
-export declare class SendOtpDto {
-    email: string;
-}
-export declare class VerifyOtpDto {
-    email: string;
-    token: string;
-    type?: string;
-}
 export declare class SupabaseService implements OnModuleInit {
     private readonly configService;
     private readonly logger;

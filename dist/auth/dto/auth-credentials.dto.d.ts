@@ -8,6 +8,4 @@ export declare class RegisterCredentialsDto {
     firstName: string;
     lastName: string;
     phone: string;
-    isDoctor?: boolean;
-    specialtyId?: string;
 }

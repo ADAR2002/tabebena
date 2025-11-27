@@ -5,8 +5,6 @@ import {
   ApiBody,
   ApiBearerAuth,
   ApiTags,
-  ApiParam,
-  ApiQuery,
   ApiConsumes,
 } from '@nestjs/swagger';
 import {
@@ -15,7 +13,6 @@ import {
 } from '../dto/auth-credentials.dto';
 import { RequestOtpDto } from '../dto/otp-request.dto';
 
-// ديكورات Swagger لواجهة برمجة التطبيقات (API)
 
 export const ApiTagsAuth = () => ApiTags('Authentication');
 
@@ -81,7 +78,7 @@ export const VerifyOtpAndSignUpDoc = () =>
           user: {
             type: 'object',
             properties: {
-              id: { type: 'number' },
+              id: { type: 'string' },
               email: { type: 'string' },
               role: { type: 'string', enum: ['DOCTOR', 'PATIENT'] },
               profileComplete: { type: 'boolean' },
@@ -140,7 +137,7 @@ export const SignUpDoc = () =>
           user: {
             type: 'object',
             properties: {
-              id: { type: 'number' },
+              id: { type: 'string' },
               email: { type: 'string' },
               role: { type: 'string', enum: ['DOCTOR', 'PATIENT'] },
               profileComplete: { type: 'boolean' },
@@ -189,7 +186,7 @@ export const SignInDoc = () =>
           user: {
             type: 'object',
             properties: {
-              id: { type: 'number' },
+              id: { type: 'string' },
               email: { type: 'string' },
               role: { type: 'string', enum: ['DOCTOR', 'PATIENT'] },
               profileComplete: { type: 'boolean' },
@@ -233,7 +230,7 @@ export const GetProfileDoc = () =>
       schema: {
         type: 'object',
         properties: {
-          id: { type: 'number' },
+          id: { type: 'string' },
           email: { type: 'string' },
           firstName: { type: 'string', nullable: true },
           lastName: { type: 'string', nullable: true },
@@ -287,6 +284,62 @@ export const GetProfileDoc = () =>
 export const UpdateDoctorProfileDoc = () =>
   applyDecorators(
     ApiBearerAuth('JWT-auth'),
+    ApiConsumes('multipart/form-data'),
+    ApiBody({
+      schema: {
+        type: 'object',
+        properties: {
+          // File uploads
+          profilePhoto: {
+            type: 'string',
+            format: 'binary',
+            description: 'Profile photo (single file, JPG/PNG)'
+          },
+          certificates: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'binary'
+            },
+            description: 'Certificate files (multiple files, PDF/PNG/JPG)'
+          },
+          clinicImages: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'binary'
+            },
+            description: 'Clinic images (multiple files, PNG/JPG)'
+          },
+          // DTO properties
+          bio: {
+            type: 'string',
+            description: 'Biography of the doctor',
+            example: 'Experienced cardiologist with 10+ years of practice'
+          },
+          specialtyId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'ID of the specialty',
+            example: '550e8400-e29b-41d4-a716-446655440000'
+          },
+          consultationFee: {
+            type: 'number',
+            format: 'float',
+            description: 'Consultation fee in local currency',
+            example: 150.50,
+            minimum: 0
+          },
+          experienceYears: {
+            type: 'integer',
+            description: 'Years of experience',
+            example: 5,
+            minimum: 0,
+            maximum: 100
+          },
+        }
+      }
+    }),
     ApiOperation({
       summary: 'تحديث ملف الطبيب الشخصي',
       description: 'تحديث معلومات ملف الطبيب الشخصي بما في ذلك الشهادات وصور العيادة',
@@ -350,7 +403,6 @@ export const UpdateDoctorProfileDoc = () =>
     ApiResponse({ status: 401, description: 'غير مصرح به - يلزم تسجيل الدخول' }),
     ApiResponse({ status: 403, description: 'ممنوع - يجب أن تكون طبيباً' }),
     ApiResponse({ status: 500, description: 'خطأ في الخادم الداخلي' }),
-    ApiConsumes('multipart/form-data'),
   );
 
 export const CheckAuthDoc = () =>

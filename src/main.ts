@@ -11,19 +11,10 @@ const isVercel = process.env.VERCEL === '1';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Enable CORS for development
   app.enableCors();
-
-  // Set global prefix for all routes
   app.setGlobalPrefix('api');
-
-  // Enable validation pipe globally
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-
-  // Serve static files from uploads directory
   app.useStaticAssets(join(__dirname, '..', 'uploads'));
-
-  // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Tabebena API')
     .setDescription('The Tabebena API documentation')

@@ -60,7 +60,7 @@ let AuthService = class AuthService {
         this.prisma = prisma;
     }
     async signUp(registerCredentialsDto) {
-        const { email, password, firstName, lastName, phone, isDoctor } = registerCredentialsDto;
+        const { email, password, firstName, lastName, phone } = registerCredentialsDto;
         const existingUser = await this.prisma.user.findUnique({
             where: { email },
         });
@@ -76,7 +76,7 @@ let AuthService = class AuthService {
                 firstName,
                 lastName,
                 phone,
-                role: isDoctor ? client_1.UserRole.DOCTOR : client_1.UserRole.PATIENT,
+                role: client_1.UserRole.PATIENT,
             },
         });
         const payload = { email: user.email, sub: user.id, role: user.role };
@@ -97,7 +97,7 @@ let AuthService = class AuthService {
     }
     async verifyOtpAndCreateUser(verifyOtpDto, registerCredentialsDto) {
         const { email, otp } = verifyOtpDto;
-        const { password, firstName, lastName, phone, isDoctor } = registerCredentialsDto;
+        const { password, firstName, lastName, phone } = registerCredentialsDto;
         const { accessToken, user } = await this.verifyOtp(email, otp);
         const existingUser = await this.prisma.user.findUnique({
             where: { email },
@@ -114,7 +114,7 @@ let AuthService = class AuthService {
                 firstName,
                 lastName,
                 phone,
-                role: isDoctor ? "DOCTOR" : "PATIENT",
+                role: client_1.UserRole.DOCTOR,
             },
         });
         return { accessToken, user: createdUser };
@@ -123,7 +123,7 @@ let AuthService = class AuthService {
         try {
             const { session } = await this.supabaseService.verifyOtp(email, token);
             if (!session) {
-                throw new common_1.UnauthorizedException('Invalid or expired OTP');
+                throw new common_1.UnauthorizedException("Invalid or expired OTP");
             }
             const payload = {
                 email: session.user.email,
@@ -181,7 +181,7 @@ let AuthService = class AuthService {
             },
         });
     }
-    async updateDoctorupdateDoctorProfileProfile(userId, updateProfileDto, files) {
+    async updateDoctorProfile(userId, updateProfileDto, files) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
         });
@@ -191,9 +191,9 @@ let AuthService = class AuthService {
         const updateData = {};
         if (updateProfileDto.bio)
             updateData.bio = updateProfileDto.bio;
-        if (updateProfileDto.consultationFee)
+        if (updateProfileDto.consultationFee !== undefined)
             updateData.consultationFee = updateProfileDto.consultationFee;
-        if (updateProfileDto.experienceYears)
+        if (updateProfileDto.experienceYears !== undefined)
             updateData.experienceYears = updateProfileDto.experienceYears;
         if (updateProfileDto.specialtyId) {
             updateData.specialty = {
@@ -253,11 +253,13 @@ let AuthService = class AuthService {
         else if (updateProfileDto.profilePhotoUrl) {
             updateData.profilePhotoUrl = updateProfileDto.profilePhotoUrl;
         }
-        const hasBio = updateProfileDto.bio || user.bio;
-        const hasSpecialty = updateProfileDto.specialtyId || user.specialtyId;
-        const hasConsultationFee = updateProfileDto.consultationFee || user.consultationFee;
-        const hasExperienceYears = updateProfileDto.experienceYears || user.experienceYears;
-        const hasProfilePhoto = updateData.profilePhotoUrl || user.profilePhotoUrl;
+        const hasBio = Boolean(updateProfileDto.bio ?? user.bio);
+        const hasSpecialty = Boolean(updateProfileDto.specialtyId ?? user.specialtyId);
+        const hasConsultationFee = updateProfileDto.consultationFee !== undefined ||
+            (user.consultationFee !== null && user.consultationFee !== undefined);
+        const hasExperienceYears = updateProfileDto.experienceYears !== undefined ||
+            (user.experienceYears !== null && user.experienceYears !== undefined);
+        const hasProfilePhoto = Boolean(updateData.profilePhotoUrl ?? user.profilePhotoUrl);
         if (hasBio &&
             hasSpecialty &&
             hasConsultationFee &&

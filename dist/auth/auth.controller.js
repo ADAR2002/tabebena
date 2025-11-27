@@ -14,12 +14,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const auth_service_1 = require("./auth.service");
-const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const otp_request_dto_1 = require("./dto/otp-request.dto");
 const auth_credentials_dto_1 = require("./dto/auth-credentials.dto");
 const swagger_decorators_1 = require("./decorators/swagger.decorators");
-const swagger_1 = require("@nestjs/swagger");
+const update_doctor_profile_dto_1 = require("./dto/update-doctor-profile.dto");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -28,7 +29,7 @@ let AuthController = class AuthController {
     async requestOtp(body) {
         return this.authService.requestOtp(body.email);
     }
-    async verifyOtpAndSignUp(email, token, otp, userDetails) {
+    async verifyOtpAndSignUp(email, otp, userDetails) {
         if (email !== userDetails.email) {
             throw new common_1.UnauthorizedException('Email in OTP verification does not match user details');
         }
@@ -40,9 +41,15 @@ let AuthController = class AuthController {
     async login(authCredentialsDto) {
         return this.authService.signIn(authCredentialsDto);
     }
-    async getProfile(req) {
-        const user = await this.authService.getUserProfile(req.user.userId);
-        return user;
+    async getUserProfile(req) {
+        return this.authService.getUserProfile(req.user.userId);
+    }
+    async updateDoctorProfile(req, updateProfileDto, files = {}) {
+        return this.authService.updateDoctorProfile(req.user.userId, updateProfileDto, {
+            profilePhoto: files?.profilePhoto,
+            certificates: files?.certificates,
+            clinicImages: files?.clinicImages,
+        });
     }
     async setProfileComplete(req, profileComplete) {
         return this.authService.setDoctorProfileComplete(req.user.userId, profileComplete);
@@ -51,10 +58,7 @@ let AuthController = class AuthController {
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('otp/request'),
-    (0, swagger_1.ApiOperation)({ summary: 'Request OTP for login/registration' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'OTP sent successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
-    (0, swagger_1.ApiBody)({ type: otp_request_dto_1.RequestOtpDto }),
+    (0, swagger_decorators_1.RequestOtpDoc)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [otp_request_dto_1.RequestOtpDto]),
@@ -64,11 +68,10 @@ __decorate([
     (0, common_1.Post)('verify-otp'),
     (0, swagger_decorators_1.VerifyOtpAndSignUpDoc)(),
     __param(0, (0, common_1.Body)('email')),
-    __param(1, (0, common_1.Body)('token')),
-    __param(2, (0, common_1.Body)('otp')),
-    __param(3, (0, common_1.Body)('userDetails')),
+    __param(1, (0, common_1.Body)('otp')),
+    __param(2, (0, common_1.Body)('userDetails')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, auth_credentials_dto_1.RegisterCredentialsDto]),
+    __metadata("design:paramtypes", [String, String, auth_credentials_dto_1.RegisterCredentialsDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyOtpAndSignUp", null);
 __decorate([
@@ -95,7 +98,23 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "getProfile", null);
+], AuthController.prototype, "getUserProfile", null);
+__decorate([
+    (0, common_1.Patch)('doctor/profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
+        { name: 'profilePhoto', maxCount: 1 },
+        { name: 'certificates', maxCount: 10 },
+        { name: 'clinicImages', maxCount: 10 },
+    ])),
+    (0, swagger_decorators_1.UpdateDoctorProfileDoc)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.UploadedFiles)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_doctor_profile_dto_1.UpdateDoctorProfileDto, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "updateDoctorProfile", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Patch)('doctor/profile-complete'),

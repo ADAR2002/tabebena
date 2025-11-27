@@ -10,109 +10,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var SupabaseService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SupabaseService = exports.VerifyOtpDto = exports.SendOtpDto = void 0;
+exports.SupabaseService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const supabase_js_1 = require("@supabase/supabase-js");
 const swagger_1 = require("@nestjs/swagger");
-class VerifyOtpResponseDto {
-    access_token;
-    token_type;
-    expires_in;
-    refresh_token;
-    user;
-}
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Access token for the authenticated session',
-        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    }),
-    __metadata("design:type", String)
-], VerifyOtpResponseDto.prototype, "access_token", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Type of the token',
-        example: 'bearer'
-    }),
-    __metadata("design:type", String)
-], VerifyOtpResponseDto.prototype, "token_type", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Expiration time of the token in seconds',
-        example: 3600
-    }),
-    __metadata("design:type", Number)
-], VerifyOtpResponseDto.prototype, "expires_in", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Refresh token for getting new access tokens',
-        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        required: false
-    }),
-    __metadata("design:type", String)
-], VerifyOtpResponseDto.prototype, "refresh_token", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'User information',
-        example: {
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            aud: 'authenticated',
-            role: 'authenticated',
-            email: 'user@example.com',
-            email_confirmed_at: '2025-11-25T10:00:00Z',
-            phone: '',
-            last_sign_in_at: '2025-11-25T10:00:00Z',
-            app_metadata: { provider: 'email' },
-            user_metadata: {},
-            created_at: '2025-11-25T09:00:00Z',
-            updated_at: '2025-11-25T10:00:00Z'
-        }
-    }),
-    __metadata("design:type", Object)
-], VerifyOtpResponseDto.prototype, "user", void 0);
-class SendOtpDto {
-    email;
-}
-exports.SendOtpDto = SendOtpDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'User email address',
-        example: 'user@example.com',
-        required: true
-    }),
-    __metadata("design:type", String)
-], SendOtpDto.prototype, "email", void 0);
-class VerifyOtpDto {
-    email;
-    token;
-    type;
-}
-exports.VerifyOtpDto = VerifyOtpDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'User email address',
-        example: 'user@example.com',
-        required: true
-    }),
-    __metadata("design:type", String)
-], VerifyOtpDto.prototype, "email", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'OTP token received via email',
-        example: '123456',
-        required: true
-    }),
-    __metadata("design:type", String)
-], VerifyOtpDto.prototype, "token", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Type of OTP verification',
-        enum: ['signup', 'invite', 'magiclink', 'recovery', 'email_change'],
-        default: 'signup',
-        required: false
-    }),
-    __metadata("design:type", String)
-], VerifyOtpDto.prototype, "type", void 0);
+const verify_otp_response_dto_1 = require("./dto/verify_otp_response.dto");
 let SupabaseService = SupabaseService_1 = class SupabaseService {
     configService;
     logger = new common_1.Logger(SupabaseService_1.name);
@@ -179,7 +82,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'OTP sent successfully',
-        type: VerifyOtpResponseDto
+        type: verify_otp_response_dto_1.VerifyOtpResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 400,
@@ -197,7 +100,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'OTP verified successfully',
-        type: VerifyOtpResponseDto
+        type: verify_otp_response_dto_1.VerifyOtpResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 400,

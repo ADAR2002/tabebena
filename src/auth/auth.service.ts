@@ -25,10 +25,9 @@ export class AuthService {
   async signUp(
     registerCredentialsDto: RegisterCredentialsDto
   ): Promise<{ accessToken: string; user: User }> {
-    const { email, password, firstName, lastName, phone, isDoctor } =
+    const { email, password, firstName, lastName, phone } =
       registerCredentialsDto;
 
-    // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -37,11 +36,9 @@ export class AuthService {
       throw new ConflictException("User with this email already exists");
     }
 
-    // Hash the password
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create the user
     const user = await this.prisma.user.create({
       data: {
         email,
@@ -49,11 +46,10 @@ export class AuthService {
         firstName,
         lastName,
         phone,
-        role: isDoctor ? UserRole.DOCTOR : UserRole.PATIENT,
+        role: UserRole.PATIENT,
       },
     });
 
-    // Generate JWT token
     const payload = { email: user.email, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload, {
       secret: JWT_SECRET,
@@ -77,12 +73,10 @@ export class AuthService {
     registerCredentialsDto: RegisterCredentialsDto
   ): Promise<{ accessToken: string; user: User }> {
     const { email, otp } = verifyOtpDto;
-    const { password, firstName, lastName, phone, isDoctor } =
-      registerCredentialsDto;
+    const { password, firstName, lastName, phone } = registerCredentialsDto;
 
     const { accessToken, user } = await this.verifyOtp(email, otp);
 
-    // Check if user was created while OTP was valid
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -91,11 +85,9 @@ export class AuthService {
       throw new ConflictException("User with this email already exists");
     }
 
-    // Hash the password
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
     const createdUser = await this.prisma.user.create({
       data: {
         email,
@@ -103,7 +95,7 @@ export class AuthService {
         firstName,
         lastName,
         phone,
-        role: isDoctor ? "DOCTOR" : "PATIENT",
+        role: UserRole.DOCTOR,
       },
     });
 
@@ -115,10 +107,9 @@ export class AuthService {
       const { session } = await this.supabaseService.verifyOtp(email, token);
 
       if (!session) {
-        throw new UnauthorizedException('Invalid or expired OTP');
+        throw new UnauthorizedException("Invalid or expired OTP");
       }
 
-      // Generate JWT
       const payload = {
         email: session.user.email,
         sub: session.user.id,
@@ -187,7 +178,7 @@ export class AuthService {
     });
   }
 
-  async updateDoctorupdateDoctorProfileProfile(
+  async updateDoctorProfile(
     userId: string,
     updateProfileDto: UpdateDoctorProfileDto,
     files?: {
@@ -196,7 +187,6 @@ export class AuthService {
       profilePhoto?: any[];
     }
   ) {
-    // التحقق من أن المستخدم طبيب
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -205,29 +195,22 @@ export class AuthService {
       throw new UnauthorizedException("Only doctors can update profile");
     }
 
-    // إعداد بيانات التحديث مع التحقق من الأنواع
     const updateData: any = {};
 
-    // معالجة الحقول الاختيارية
     if (updateProfileDto.bio) updateData.bio = updateProfileDto.bio;
-    if (updateProfileDto.consultationFee)
+    if (updateProfileDto.consultationFee !== undefined)
       updateData.consultationFee = updateProfileDto.consultationFee;
-    if (updateProfileDto.experienceYears)
+    if (updateProfileDto.experienceYears !== undefined)
       updateData.experienceYears = updateProfileDto.experienceYears;
 
-    // معالجة العلاقة مع التخصص
     if (updateProfileDto.specialtyId) {
       updateData.specialty = {
         connect: { id: updateProfileDto.specialtyId },
       };
     }
 
-    // معالجة الشهادات (رفع ملفات أو روابط)
     if (files?.certificates && files.certificates.length > 0) {
-      // حذف الشهادات الحالية أولاً
       await this.prisma.certificate.deleteMany({ where: { userId } });
-
-      // إنشاء الشهادات الجديدة من الملفات المرفوعة
       updateData.certificates = {
         create: files.certificates.map((file) => ({
           title: file.originalname, // Use original filename as title
@@ -240,7 +223,6 @@ export class AuthService {
       updateProfileDto.certificates &&
       updateProfileDto.certificates.length > 0
     ) {
-      // في حال تم إرسال روابط جاهزة بدلاً من رفع ملفات
       await this.prisma.certificate.deleteMany({ where: { userId } });
       updateData.certificates = {
         create: updateProfileDto.certificates.map((url) => ({
@@ -252,12 +234,9 @@ export class AuthService {
       };
     }
 
-    // Handle clinic images upload
     if (files?.clinicImages && files.clinicImages.length > 0) {
-      // Delete existing clinic images first
       await this.prisma.clinicImage.deleteMany({ where: { userId } });
 
-      // Add new clinic images from uploaded files
       updateData.clinicImages = {
         create: files.clinicImages.map((file) => ({
           imageUrl: `clinic-images/${file.filename}`,
@@ -270,7 +249,6 @@ export class AuthService {
       updateProfileDto.clinicImages &&
       updateProfileDto.clinicImages.length > 0
     ) {
-      // If no files but URLs are provided
       await this.prisma.clinicImage.deleteMany({ where: { userId } });
       updateData.clinicImages = {
         create: updateProfileDto.clinicImages.map((url) => ({
@@ -282,7 +260,6 @@ export class AuthService {
       };
     }
 
-    // Handle profile photo upload or URL
     if (files?.profilePhoto && files.profilePhoto.length > 0) {
       const file = files.profilePhoto[0];
       updateData.profilePhotoUrl = `profile-photos/${file.filename}`;
@@ -290,15 +267,19 @@ export class AuthService {
       updateData.profilePhotoUrl = updateProfileDto.profilePhotoUrl;
     }
 
-    // Compute profileComplete flag based on key fields
-    const hasBio = updateProfileDto.bio || user.bio;
-    const hasSpecialty = updateProfileDto.specialtyId || user.specialtyId;
+    const hasBio = Boolean(updateProfileDto.bio ?? user.bio);
+    const hasSpecialty = Boolean(
+      updateProfileDto.specialtyId ?? user.specialtyId
+    );
     const hasConsultationFee =
-      updateProfileDto.consultationFee || user.consultationFee;
+      updateProfileDto.consultationFee !== undefined ||
+      (user.consultationFee !== null && user.consultationFee !== undefined);
     const hasExperienceYears =
-      updateProfileDto.experienceYears || user.experienceYears;
-    const hasProfilePhoto =
-      updateData.profilePhotoUrl || (user as any).profilePhotoUrl;
+      updateProfileDto.experienceYears !== undefined ||
+      (user.experienceYears !== null && user.experienceYears !== undefined);
+    const hasProfilePhoto = Boolean(
+      updateData.profilePhotoUrl ?? (user as any).profilePhotoUrl
+    );
 
     if (
       hasBio &&

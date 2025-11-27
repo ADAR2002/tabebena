@@ -1,86 +1,9 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createClient, SupabaseClient, AuthOtpResponse } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { EmailOtpType } from '@supabase/supabase-js';
-import { ApiProperty, ApiResponse } from '@nestjs/swagger';
-
-class VerifyOtpResponseDto {
-  @ApiProperty({
-    description: 'Access token for the authenticated session',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-  })
-  access_token: string;
-
-  @ApiProperty({
-    description: 'Type of the token',
-    example: 'bearer'
-  })
-  token_type: string;
-
-  @ApiProperty({
-    description: 'Expiration time of the token in seconds',
-    example: 3600
-  })
-  expires_in: number;
-
-  @ApiProperty({
-    description: 'Refresh token for getting new access tokens',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-    required: false
-  })
-  refresh_token?: string;
-
-  @ApiProperty({
-    description: 'User information',
-    example: {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      aud: 'authenticated',
-      role: 'authenticated',
-      email: 'user@example.com',
-      email_confirmed_at: '2025-11-25T10:00:00Z',
-      phone: '',
-      last_sign_in_at: '2025-11-25T10:00:00Z',
-      app_metadata: { provider: 'email' },
-      user_metadata: {},
-      created_at: '2025-11-25T09:00:00Z',
-      updated_at: '2025-11-25T10:00:00Z'
-    }
-  })
-  user: any;
-}
-
-export class SendOtpDto {
-  @ApiProperty({
-    description: 'User email address',
-    example: 'user@example.com',
-    required: true
-  })
-  email: string;
-}
-
-export class VerifyOtpDto {
-  @ApiProperty({
-    description: 'User email address',
-    example: 'user@example.com',
-    required: true
-  })
-  email: string;
-
-  @ApiProperty({
-    description: 'OTP token received via email',
-    example: '123456',
-    required: true
-  })
-  token: string;
-
-  @ApiProperty({
-    description: 'Type of OTP verification',
-    enum: ['signup', 'invite', 'magiclink', 'recovery', 'email_change'],
-    default: 'signup',
-    required: false
-  })
-  type?: string;
-}
+import {ApiResponse } from '@nestjs/swagger';
+import { VerifyOtpResponseDto } from './dto/verify_otp_response.dto';
 
 @Injectable()
 export class SupabaseService implements OnModuleInit {

@@ -59,22 +59,22 @@ export declare class AuthService {
         }[];
     } & {
         email: string;
-        phone: string;
-        id: string;
         password: string;
         firstName: string;
         lastName: string;
+        phone: string;
         bio: string | null;
-        role: import("@prisma/client").$Enums.UserRole;
         specialtyId: string | null;
-        profileComplete: boolean;
         consultationFee: number | null;
         experienceYears: number | null;
         profilePhotoUrl: string | null;
+        id: string;
+        role: import("@prisma/client").$Enums.UserRole;
+        profileComplete: boolean;
         createdAt: Date;
         updatedAt: Date;
     }) | null>;
-    updateDoctorupdateDoctorProfileProfile(userId: string, updateProfileDto: UpdateDoctorProfileDto, files?: {
+    updateDoctorProfile(userId: string, updateProfileDto: UpdateDoctorProfileDto, files?: {
         certificates?: any[];
         clinicImages?: any[];
         profilePhoto?: any[];
@@ -105,35 +105,35 @@ export declare class AuthService {
         }[];
     } & {
         email: string;
-        phone: string;
-        id: string;
         password: string;
         firstName: string;
         lastName: string;
+        phone: string;
         bio: string | null;
-        role: import("@prisma/client").$Enums.UserRole;
         specialtyId: string | null;
-        profileComplete: boolean;
         consultationFee: number | null;
         experienceYears: number | null;
         profilePhotoUrl: string | null;
+        id: string;
+        role: import("@prisma/client").$Enums.UserRole;
+        profileComplete: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
     setDoctorProfileComplete(userId: string, profileComplete: boolean): Promise<{
         email: string;
-        phone: string;
-        id: string;
         password: string;
         firstName: string;
         lastName: string;
+        phone: string;
         bio: string | null;
-        role: import("@prisma/client").$Enums.UserRole;
         specialtyId: string | null;
-        profileComplete: boolean;
         consultationFee: number | null;
         experienceYears: number | null;
         profilePhotoUrl: string | null;
+        id: string;
+        role: import("@prisma/client").$Enums.UserRole;
+        profileComplete: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
