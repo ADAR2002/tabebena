@@ -207,6 +207,18 @@ const GetProfileDoc = () => (0, common_1.applyDecorators)((0, swagger_1.ApiBeare
                     availableDays: { type: 'array', items: { type: 'string' } },
                     startTime: { type: 'string', format: 'time' },
                     endTime: { type: 'string', format: 'time' },
+                    clinicLocation: {
+                        type: 'object',
+                        nullable: true,
+                        properties: {
+                            id: { type: 'string' },
+                            address: { type: 'string' },
+                            city: { type: 'string' },
+                            latitude: { type: 'number' },
+                            longitude: { type: 'number' },
+                            updatedAt: { type: 'string', format: 'date-time' }
+                        },
+                    },
                 },
             },
             patientProfile: {
@@ -228,41 +240,43 @@ const GetProfileDoc = () => (0, common_1.applyDecorators)((0, swagger_1.ApiBeare
     description: 'غير مصرح به - يلزم تسجيل الدخول',
 }), (0, swagger_1.ApiResponse)({ status: 404, description: 'لم يتم العثور على المستخدم' }), (0, swagger_1.ApiResponse)({ status: 500, description: 'خطأ في الخادم الداخلي' }));
 exports.GetProfileDoc = GetProfileDoc;
-const UpdateDoctorProfileDoc = () => (0, common_1.applyDecorators)((0, swagger_1.ApiBearerAuth)('JWT-auth'), (0, swagger_1.ApiConsumes)('multipart/form-data'), (0, swagger_1.ApiBody)({
+const UpdateDoctorProfileDoc = () => (0, common_1.applyDecorators)((0, swagger_1.ApiBearerAuth)('JWT-auth'), (0, swagger_1.ApiBody)({
     schema: {
         type: 'object',
         properties: {
-            profilePhoto: {
+            profilePhotoUrl: {
                 type: 'string',
-                format: 'binary',
-                description: 'Profile photo (single file, JPG/PNG)'
+                format: 'url',
+                description: 'URL of the profile photo',
+                example: 'https://example.com/profile.jpg'
             },
             certificates: {
                 type: 'array',
                 items: {
                     type: 'string',
-                    format: 'binary'
+                    format: 'url'
                 },
-                description: 'Certificate files (multiple files, PDF/PNG/JPG)'
+                description: 'Array of certificate image URLs',
+                example: ['https://example.com/cert1.jpg', 'https://example.com/cert2.jpg']
             },
             clinicImages: {
                 type: 'array',
                 items: {
                     type: 'string',
-                    format: 'binary'
+                    format: 'url'
                 },
-                description: 'Clinic images (multiple files, PNG/JPG)'
+                description: 'Array of clinic image URLs',
+                example: ['https://example.com/clinic1.jpg', 'https://example.com/clinic2.jpg']
             },
             bio: {
                 type: 'string',
                 description: 'Biography of the doctor',
                 example: 'Experienced cardiologist with 10+ years of practice'
             },
-            specialtyId: {
+            specialty: {
                 type: 'string',
-                format: 'uuid',
-                description: 'ID of the specialty',
-                example: '550e8400-e29b-41d4-a716-446655440000'
+                description: 'Name of the specialty',
+                example: 'Cardiology'
             },
             consultationFee: {
                 type: 'number',
@@ -277,6 +291,58 @@ const UpdateDoctorProfileDoc = () => (0, common_1.applyDecorators)((0, swagger_1
                 example: 5,
                 minimum: 0,
                 maximum: 100
+            },
+            dateOfBirth: {
+                type: 'string',
+                format: 'date',
+                description: 'Date of birth of the doctor',
+                example: '1985-05-10'
+            },
+            gender: {
+                type: 'string',
+                description: 'Gender of the doctor',
+                enum: ['MALE', 'FEMALE', 'OTHER'],
+                example: 'MALE'
+            },
+            clinicLocation: {
+                type: 'object',
+                description: 'Clinic location details',
+                properties: {
+                    address: {
+                        type: 'string',
+                        example: '123 Medical Center, Healthcare St.'
+                    },
+                    city: {
+                        type: 'string',
+                        example: 'Riyadh'
+                    },
+                    latitude: {
+                        type: 'number',
+                        format: 'float',
+                        example: 24.7136
+                    },
+                    longitude: {
+                        type: 'number',
+                        format: 'float',
+                        example: 46.6753
+                    },
+                    region: {
+                        type: 'string',
+                        description: 'Region / area of the clinic',
+                        example: 'Al Olaya'
+                    },
+                    clinicName: {
+                        type: 'string',
+                        description: 'Clinic name',
+                        example: 'Tabebena Clinic'
+                    },
+                    clinicPhone: {
+                        type: 'string',
+                        description: 'Clinic phone number',
+                        example: '+966500000000'
+                    }
+                },
+                required: ['address', 'city', 'latitude', 'longitude']
             },
         }
     }
@@ -294,6 +360,8 @@ const UpdateDoctorProfileDoc = () => (0, common_1.applyDecorators)((0, swagger_1
             firstName: { type: 'string' },
             lastName: { type: 'string' },
             phone: { type: 'string' },
+            dateOfBirth: { type: 'string', format: 'date', nullable: true },
+            gender: { type: 'string', enum: ['MALE', 'FEMALE', 'OTHER'], nullable: true },
             bio: { type: 'string', nullable: true },
             role: { type: 'string', enum: ['DOCTOR'] },
             profileComplete: { type: 'boolean' },

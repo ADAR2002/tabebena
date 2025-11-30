@@ -162,12 +162,11 @@ export class AuthService {
     }
     return null;
   }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   async getUserProfile(userId: string) {
     return this.prisma.user.findUnique({
       where: { id: userId },
       include: {
-        specialty: true,
         certificates: {
           orderBy: { createdAt: "desc" },
         },
@@ -177,15 +176,10 @@ export class AuthService {
       },
     });
   }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   async updateDoctorProfile(
     userId: string,
-    updateProfileDto: UpdateDoctorProfileDto,
-    files?: {
-      certificates?: any[];
-      clinicImages?: any[];
-      profilePhoto?: any[];
-    }
+    updateProfileDto: UpdateDoctorProfileDto
   ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -203,26 +197,30 @@ export class AuthService {
     if (updateProfileDto.experienceYears !== undefined)
       updateData.experienceYears = updateProfileDto.experienceYears;
 
-    if (updateProfileDto.specialtyId) {
-      updateData.specialty = {
-        connect: { id: updateProfileDto.specialtyId },
+    if (updateProfileDto.specialty) {
+      updateData.specialty = updateProfileDto.specialty;
+    }
+
+    if (updateProfileDto.dateOfBirth) {
+      updateData.dateOfBirth = new Date(updateProfileDto.dateOfBirth);
+    }
+
+    if (updateProfileDto.gender) {
+      updateData.gender = updateProfileDto.gender;
+    }
+
+    // Handle clinic location update
+    if (updateProfileDto.clinicLocation) {
+      const { address, city, latitude, longitude, region, clinicName, clinicPhone } = updateProfileDto.clinicLocation;
+      updateData.clinicLocation = {
+        upsert: {
+          create: { address, city, latitude, longitude, region, clinicName, clinicPhone },
+          update: { address, city, latitude, longitude, region, clinicName, clinicPhone }
+        }
       };
     }
 
-    if (files?.certificates && files.certificates.length > 0) {
-      await this.prisma.certificate.deleteMany({ where: { userId } });
-      updateData.certificates = {
-        create: files.certificates.map((file) => ({
-          title: file.originalname, // Use original filename as title
-          institution: "Unknown Institution", // Default value, can be updated later
-          year: new Date().getFullYear(), // Default to current year
-          imageUrl: `certificates/${file.filename}`,
-        })),
-      };
-    } else if (
-      updateProfileDto.certificates &&
-      updateProfileDto.certificates.length > 0
-    ) {
+    if (updateProfileDto.certificates && updateProfileDto.certificates.length > 0) {
       await this.prisma.certificate.deleteMany({ where: { userId } });
       updateData.certificates = {
         create: updateProfileDto.certificates.map((url) => ({
@@ -234,21 +232,7 @@ export class AuthService {
       };
     }
 
-    if (files?.clinicImages && files.clinicImages.length > 0) {
-      await this.prisma.clinicImage.deleteMany({ where: { userId } });
-
-      updateData.clinicImages = {
-        create: files.clinicImages.map((file) => ({
-          imageUrl: `clinic-images/${file.filename}`,
-          caption: file.originalname, // Use original filename as caption
-          isPrimary: false, // Default to false, can be updated later
-          displayOrder: 0, // Default display order
-        })),
-      };
-    } else if (
-      updateProfileDto.clinicImages &&
-      updateProfileDto.clinicImages.length > 0
-    ) {
+    if (updateProfileDto.clinicImages && updateProfileDto.clinicImages.length > 0) {
       await this.prisma.clinicImage.deleteMany({ where: { userId } });
       updateData.clinicImages = {
         create: updateProfileDto.clinicImages.map((url) => ({
@@ -260,16 +244,13 @@ export class AuthService {
       };
     }
 
-    if (files?.profilePhoto && files.profilePhoto.length > 0) {
-      const file = files.profilePhoto[0];
-      updateData.profilePhotoUrl = `profile-photos/${file.filename}`;
-    } else if (updateProfileDto.profilePhotoUrl) {
+    if (updateProfileDto.profilePhotoUrl) {
       updateData.profilePhotoUrl = updateProfileDto.profilePhotoUrl;
     }
 
     const hasBio = Boolean(updateProfileDto.bio ?? user.bio);
     const hasSpecialty = Boolean(
-      updateProfileDto.specialtyId ?? user.specialtyId
+      updateProfileDto.specialty ?? user.specialty
     );
     const hasConsultationFee =
       updateProfileDto.consultationFee !== undefined ||
@@ -296,8 +277,8 @@ export class AuthService {
       data: updateData,
       include: {
         certificates: true,
-        specialty: true,
         clinicImages: true,
+        clinicLocation: true,
       },
     });
   }

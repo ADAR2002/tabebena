@@ -15,70 +15,70 @@ export class CreateVisitDto {
     example: '2023-01-01T10:00:00.000Z'
   })
   @IsDateString()
-  @IsNotEmpty()
-  visitDate: Date;
+  @IsOptional()
+  visitDate?: Date;
 
   @ApiProperty({
-    description: 'The reason for the visit',
-    example: 'Routine checkup'
+    description: 'Reason for the visit',
+    example: 'Regular checkup'
   })
   @IsString()
-  @IsNotEmpty()
-  reason: string;
+  @IsOptional()
+  reason?: string;
 
-  @ApiPropertyOptional({
-    description: 'The diagnosis for the visit',
+  @ApiProperty({
+    description: 'Diagnosis',
     example: 'Common cold'
   })
   @IsString()
   @IsOptional()
   diagnosis?: string;
-  @ApiPropertyOptional({
-    description: 'The treatment plan for the visit',
-    example: 'Rest and drink plenty of fluids'
+
+  @ApiProperty({
+    description: 'Treatment plan',
+    example: 'Rest and hydration'
   })
   @IsString()
   @IsOptional()
   treatment?: string;
 
-  @ApiPropertyOptional({
-    description: 'Prescription details for the visit',
-    example: 'Paracetamol 500mg every 6 hours'
+  @ApiProperty({
+    description: 'Prescription details',
+    example: 'Take medicine X for 5 days'
   })
   @IsString()
   @IsOptional()
   prescription?: string;
 
-  @ApiPropertyOptional({
-    description: 'Vital signs recorded during the visit',
-    example: 'BP: 120/80, HR: 72, Temp: 37°C'
+  @ApiProperty({
+    description: 'Vital signs',
+    example: 'BP: 120/80, Temp: 98.6°F'
   })
   @IsString()
   @IsOptional()
   vitalSigns?: string;
 
-  @ApiPropertyOptional({
-    description: 'Additional notes about the visit',
-    example: 'Patient to follow up in 2 weeks'
+  @ApiProperty({
+    description: 'Additional notes',
+    example: 'Patient should return in 2 weeks'
   })
   @IsString()
   @IsOptional()
   notes?: string;
 
   @ApiProperty({
-    description: 'Consultation fee for the visit',
+    description: 'Consultation fee',
     example: 100.50
   })
   @IsNumber()
-  @IsNotEmpty()
-  consultationFee: number;
+  @IsOptional()
+  consultationFee?: number;
 
-  @ApiPropertyOptional({
-    description: 'Amount paid for the visit',
-    example: 100.50,
-    default: 0
+  @ApiProperty({
+    description: 'Amount paid by the patient',
+    example: 100.50
   })
   @IsNumber()
   @IsOptional()
-  paidAmount: number = 0;
+  paidAmount?: number;
 }

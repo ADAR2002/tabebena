@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   HttpStatus,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { VisitsService } from './visits.service';
@@ -18,14 +19,15 @@ import { UpdateVisitDto } from './dto/update-visit.dto';
 import { VisitResponseDto } from './dto/visit-response.dto';
 import { 
   ApiCreateVisit,
+  ApiDeleteVisit,
   ApiFindAllVisits,
   ApiFindVisitById,
-  ApiGetPatientVisits,
-  ApiUpdateVisit,
-  ApiDeleteVisit
+  ApiGetPatientVisitsByPhone,
+  ApiUpdateVisit
 } from './decorators/swagger.decorators';
-
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 @ApiTags('visits')
+@UseGuards(JwtAuthGuard)
 @Controller('visits')
 export class VisitsController {
   constructor(private readonly visitsService: VisitsService) {}
@@ -57,6 +59,7 @@ export class VisitsController {
     description: 'List of patient visits', 
     type: [VisitResponseDto] 
   })
+  @ApiGetPatientVisitsByPhone()
   getPatientVisitsByPhone(
     @Param('phone') phone: string,
   ): Promise<VisitResponseDto[]> {
@@ -64,6 +67,8 @@ export class VisitsController {
   }
 
   @Patch(':id')
+  @ApiUpdateVisit()
+  @ApiOperation({ summary: 'Update a visit' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateVisitDto: UpdateVisitDto,
@@ -72,8 +77,9 @@ export class VisitsController {
   }
 
   @Delete(':id')
+  @ApiDeleteVisit()
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  remove(@Param('id', ParseUUIDPipe) id: string): Promise<String> {
     return this.visitsService.remove(id);
   }
 }

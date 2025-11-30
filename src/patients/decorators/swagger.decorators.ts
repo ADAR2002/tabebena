@@ -16,13 +16,14 @@ import { UpdatePatientDto } from '../dto/update-patient.dto';
 export function ApiPatientController() {
   return applyDecorators(
     ApiTags('المرضى - Patients'),
-    ApiBearerAuth(),
+    ApiBearerAuth('JWT-auth'),
   );
 }
 
 // Create Patient Decorators
 export function ApiCreatePatient() {
   return applyDecorators(
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({
       summary: 'إنشاء مريض جديد',
       description: 'تسجيل بيانات مريض جديد في النظام',
@@ -66,6 +67,7 @@ export function ApiCreatePatient() {
 // Find All Patients Decorators
 export function ApiFindAllPatients() {
   return applyDecorators(
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({
       summary: 'عرض قائمة المرضى',
       description: 'استرجاع قائمة المرضى مع الترقيم',
@@ -118,6 +120,7 @@ export function ApiFindAllPatients() {
 // Search Patients Decorators
 export function ApiSearchPatients() {
   return applyDecorators(
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({
       summary: 'بحث عن المرضى',
       description: 'بحث عن المرضى باستخدام الاسم أو رقم الهاتف',
@@ -156,6 +159,7 @@ export function ApiSearchPatients() {
 // Find Patient by Phone Decorators
 export function ApiFindPatientByPhone() {
   return applyDecorators(
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({
       summary: 'البحث عن مريض برقم الهاتف',
       description: 'البحث عن مريض باستخدام رقم الهاتف',
@@ -204,6 +208,7 @@ export function ApiFindPatientByPhone() {
 // Update Patient by Phone Decorators
 export function ApiUpdatePatientByPhone() {
   return applyDecorators(
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({
       summary: 'تحديث بيانات مريض',
       description: 'تحديث بيانات مريض باستخدام رقم الهاتف',
@@ -265,6 +270,7 @@ export function ApiUpdatePatientByPhone() {
 // Delete Patient by Phone Decorators
 export function ApiDeletePatientByPhone() {
   return applyDecorators(
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({
       summary: 'حذف مريض',
       description: 'حذف مريض باستخدام رقم الهاتف',

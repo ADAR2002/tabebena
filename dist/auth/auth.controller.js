@@ -45,11 +45,7 @@ let AuthController = class AuthController {
         return this.authService.getUserProfile(req.user.userId);
     }
     async updateDoctorProfile(req, updateProfileDto, files = {}) {
-        return this.authService.updateDoctorProfile(req.user.userId, updateProfileDto, {
-            profilePhoto: files?.profilePhoto,
-            certificates: files?.certificates,
-            clinicImages: files?.clinicImages,
-        });
+        return this.authService.updateDoctorProfile(req.user.userId, updateProfileDto);
     }
     async setProfileComplete(req, profileComplete) {
         return this.authService.setDoctorProfileComplete(req.user.userId, profileComplete);

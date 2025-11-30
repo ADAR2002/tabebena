@@ -16,7 +16,10 @@ export class PatientsService {
     return this.prisma.patient.create({
       data: {
         ...createPatientDto,
-        doctorUserId: doctorId,
+        dateOfBirth: new Date(createPatientDto.dateOfBirth),
+        doctor: {
+          connect: { id: doctorId }
+        }
       },
     });
   }

@@ -93,7 +93,7 @@ const PatientIdParam = {
 // Decorator Functions
 export function ApiCreateVisit() {
   return applyDecorators(
-    ApiBearerAuth(),
+    ApiBearerAuth('JWT-auth'),
     ApiOperation(CreateVisitOperation),
     ApiBody(CreateVisitBody),
     ApiResponse({ 
@@ -114,7 +114,7 @@ export function ApiCreateVisit() {
 
 export function ApiFindAllVisits() {
   return applyDecorators(
-    ApiBearerAuth(),
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({ 
       summary: 'Get all visits or filter by patient ID',
       description: 'Retrieves a list of visits. Can be filtered by patient ID.'
@@ -133,9 +133,34 @@ export function ApiFindAllVisits() {
   );
 }
 
+export function ApiGetPatientVisitsByPhone() {
+  return applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({ 
+      summary: 'Get visits by patient phone number',
+      description: 'Retrieves all visits for a patient using their phone number.'
+    }),
+    ApiParam({
+      name: 'phone',
+      required: true,
+      description: 'Patient phone number',
+      example: '+1234567890'
+    }),
+    ApiResponse({ 
+      status: 200, 
+      description: 'List of patient visits', 
+      type: [VisitResponseDto] 
+    }),
+    ApiResponse({ 
+      status: 404, 
+      description: 'Patient not found' 
+    })
+  );
+}
+
 export function ApiFindVisitById() {
   return applyDecorators(
-    ApiBearerAuth(),
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({ 
       summary: 'Get a visit by ID',
       description: 'Retrieves a specific visit by its unique identifier.'
@@ -159,7 +184,7 @@ export function ApiFindVisitById() {
 
 export function ApiGetPatientVisits() {
   return applyDecorators(
-    ApiBearerAuth(),
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({ 
       summary: 'Get all visits for a specific patient',
       description: 'Retrieves all visits associated with a specific patient.'
@@ -183,7 +208,7 @@ export function ApiGetPatientVisits() {
 
 export function ApiUpdateVisit() {
   return applyDecorators(
-    ApiBearerAuth(),
+    ApiBearerAuth('JWT-auth'),
     ApiOperation(UpdateVisitOperation),
     ApiParam(VisitIdParam),
     ApiBody(UpdateVisitBody),
@@ -205,7 +230,7 @@ export function ApiUpdateVisit() {
 
 export function ApiDeleteVisit() {
   return applyDecorators(
-    ApiBearerAuth(),
+    ApiBearerAuth('JWT-auth'),
     ApiOperation({ 
       summary: 'Delete a visit',
       description: 'Deletes a specific visit by its ID.'

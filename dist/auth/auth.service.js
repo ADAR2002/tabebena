@@ -171,7 +171,6 @@ let AuthService = class AuthService {
         return this.prisma.user.findUnique({
             where: { id: userId },
             include: {
-                specialty: true,
                 certificates: {
                     orderBy: { createdAt: "desc" },
                 },
@@ -181,7 +180,7 @@ let AuthService = class AuthService {
             },
         });
     }
-    async updateDoctorProfile(userId, updateProfileDto, files) {
+    async updateDoctorProfile(userId, updateProfileDto) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
         });
@@ -195,24 +194,25 @@ let AuthService = class AuthService {
             updateData.consultationFee = updateProfileDto.consultationFee;
         if (updateProfileDto.experienceYears !== undefined)
             updateData.experienceYears = updateProfileDto.experienceYears;
-        if (updateProfileDto.specialtyId) {
-            updateData.specialty = {
-                connect: { id: updateProfileDto.specialtyId },
+        if (updateProfileDto.specialty) {
+            updateData.specialty = updateProfileDto.specialty;
+        }
+        if (updateProfileDto.dateOfBirth) {
+            updateData.dateOfBirth = new Date(updateProfileDto.dateOfBirth);
+        }
+        if (updateProfileDto.gender) {
+            updateData.gender = updateProfileDto.gender;
+        }
+        if (updateProfileDto.clinicLocation) {
+            const { address, city, latitude, longitude, region, clinicName, clinicPhone } = updateProfileDto.clinicLocation;
+            updateData.clinicLocation = {
+                upsert: {
+                    create: { address, city, latitude, longitude, region, clinicName, clinicPhone },
+                    update: { address, city, latitude, longitude, region, clinicName, clinicPhone }
+                }
             };
         }
-        if (files?.certificates && files.certificates.length > 0) {
-            await this.prisma.certificate.deleteMany({ where: { userId } });
-            updateData.certificates = {
-                create: files.certificates.map((file) => ({
-                    title: file.originalname,
-                    institution: "Unknown Institution",
-                    year: new Date().getFullYear(),
-                    imageUrl: `certificates/${file.filename}`,
-                })),
-            };
-        }
-        else if (updateProfileDto.certificates &&
-            updateProfileDto.certificates.length > 0) {
+        if (updateProfileDto.certificates && updateProfileDto.certificates.length > 0) {
             await this.prisma.certificate.deleteMany({ where: { userId } });
             updateData.certificates = {
                 create: updateProfileDto.certificates.map((url) => ({
@@ -223,19 +223,7 @@ let AuthService = class AuthService {
                 })),
             };
         }
-        if (files?.clinicImages && files.clinicImages.length > 0) {
-            await this.prisma.clinicImage.deleteMany({ where: { userId } });
-            updateData.clinicImages = {
-                create: files.clinicImages.map((file) => ({
-                    imageUrl: `clinic-images/${file.filename}`,
-                    caption: file.originalname,
-                    isPrimary: false,
-                    displayOrder: 0,
-                })),
-            };
-        }
-        else if (updateProfileDto.clinicImages &&
-            updateProfileDto.clinicImages.length > 0) {
+        if (updateProfileDto.clinicImages && updateProfileDto.clinicImages.length > 0) {
             await this.prisma.clinicImage.deleteMany({ where: { userId } });
             updateData.clinicImages = {
                 create: updateProfileDto.clinicImages.map((url) => ({
@@ -246,15 +234,11 @@ let AuthService = class AuthService {
                 })),
             };
         }
-        if (files?.profilePhoto && files.profilePhoto.length > 0) {
-            const file = files.profilePhoto[0];
-            updateData.profilePhotoUrl = `profile-photos/${file.filename}`;
-        }
-        else if (updateProfileDto.profilePhotoUrl) {
+        if (updateProfileDto.profilePhotoUrl) {
             updateData.profilePhotoUrl = updateProfileDto.profilePhotoUrl;
         }
         const hasBio = Boolean(updateProfileDto.bio ?? user.bio);
-        const hasSpecialty = Boolean(updateProfileDto.specialtyId ?? user.specialtyId);
+        const hasSpecialty = Boolean(updateProfileDto.specialty ?? user.specialty);
         const hasConsultationFee = updateProfileDto.consultationFee !== undefined ||
             (user.consultationFee !== null && user.consultationFee !== undefined);
         const hasExperienceYears = updateProfileDto.experienceYears !== undefined ||
@@ -272,8 +256,8 @@ let AuthService = class AuthService {
             data: updateData,
             include: {
                 certificates: true,
-                specialty: true,
                 clinicImages: true,
+                clinicLocation: true,
             },
         });
     }

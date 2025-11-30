@@ -84,12 +84,7 @@ export class AuthController {
   ) {
     return this.authService.updateDoctorProfile(
       req.user.userId,
-      updateProfileDto,
-      {
-        profilePhoto: files?.profilePhoto,
-        certificates: files?.certificates,
-        clinicImages: files?.clinicImages,
-      }
+      updateProfileDto
     );
   }
 

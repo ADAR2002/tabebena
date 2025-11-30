@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateVisitDto } from './dto/create-visit.dto';
-import { UpdateVisitDto } from './dto/update-visit.dto';
-import { VisitResponseDto } from './dto/visit-response.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateVisitDto } from "./dto/create-visit.dto";
+import { UpdateVisitDto } from "./dto/update-visit.dto";
+import { VisitResponseDto } from "./dto/visit-response.dto";
 
 @Injectable()
 export class VisitsService {
@@ -27,6 +27,17 @@ export class VisitsService {
   }
 
   async create(createVisitDto: CreateVisitDto): Promise<VisitResponseDto> {
+    // First, check if the patient exists
+    const patient = await this.prisma.patient.findUnique({
+      where: { id: createVisitDto.patientId },
+    });
+
+    if (!patient) {
+      throw new NotFoundException(
+        `Patient with ID ${createVisitDto.patientId} not found`
+      );
+    }
+
     const visit = await this.prisma.visit.create({
       data: {
         patientId: createVisitDto.patientId,
@@ -37,8 +48,8 @@ export class VisitsService {
         prescription: createVisitDto.prescription,
         vitalSigns: createVisitDto.vitalSigns,
         notes: createVisitDto.notes,
-        consultationFee: createVisitDto.consultationFee,
-        paidAmount: createVisitDto.paidAmount || 0,
+        consultationFee: createVisitDto.consultationFee || 0, // Provide a default value
+        paidAmount: createVisitDto.paidAmount || 0, // Provide a default value
       },
     });
 
@@ -46,13 +57,21 @@ export class VisitsService {
   }
 
   async findAll(patientId?: string): Promise<VisitResponseDto[]> {
+    const patient = await this.prisma.patient.findUnique({
+      where: { id: patientId },
+    });
+
+    if (!patient) {
+      throw new NotFoundException(`Patient with ID ${patientId} not found`);
+    }
+
     const where = patientId ? { patientId } : {};
     const visits = await this.prisma.visit.findMany({
       where,
-      orderBy: { visitDate: 'desc' },
+      orderBy: { visitDate: "desc" },
     });
 
-    return visits.map(visit => this.mapToResponse(visit));
+    return visits.map((visit) => this.mapToResponse(visit));
   }
 
   async findOne(id: string): Promise<VisitResponseDto> {
@@ -69,11 +88,13 @@ export class VisitsService {
 
   async update(
     id: string,
-    updateVisitDto: UpdateVisitDto,
+    updateVisitDto: UpdateVisitDto
   ): Promise<VisitResponseDto> {
     // Check if visit exists
-    await this.findOne(id);
-
+    const visit = await this.findOne(id);
+    if (!visit) {
+      throw new NotFoundException(`Visit with ID ${id} not found`);
+    }
     const updatedVisit = await this.prisma.visit.update({
       where: { id },
       data: updateVisitDto,
@@ -82,20 +103,23 @@ export class VisitsService {
     return this.mapToResponse(updatedVisit);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<String> {
     // Check if visit exists
-    await this.findOne(id);
-
+    const visit = await this.findOne(id);
+    if (!visit) {
+      throw new NotFoundException(`Visit with ID ${id} not found`);
+    }
     await this.prisma.visit.delete({
       where: { id },
     });
+    return `Visit with ID ${id} has been successfully deleted`;
   }
 
   async getPatientVisits(phone: string): Promise<VisitResponseDto[]> {
     // First, find the patient by phone number
     const patient = await this.prisma.patient.findFirst({
       where: { phone },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (!patient) {
@@ -105,9 +129,8 @@ export class VisitsService {
     // Then find all visits for this patient
     const visits = await this.prisma.visit.findMany({
       where: { patientId: patient.id },
-      orderBy: { visitDate: 'desc' },
+      orderBy: { visitDate: "desc" },
     });
-
-    return visits.map(visit => this.mapToResponse(visit));
+    return visits.map((visit) => this.mapToResponse(visit));
   }
 }
