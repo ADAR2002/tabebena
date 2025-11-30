@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const auth_service_1 = require("./auth.service");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const interceptors_1 = require("../common/interceptors");
 const otp_request_dto_1 = require("./dto/otp-request.dto");
 const auth_credentials_dto_1 = require("./dto/auth-credentials.dto");
 const swagger_decorators_1 = require("./decorators/swagger.decorators");
@@ -122,6 +123,7 @@ __decorate([
 ], AuthController.prototype, "setProfileComplete", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_decorators_1.ApiTagsAuth)(),
+    (0, common_1.UseInterceptors)(interceptors_1.ResponseInterceptor, interceptors_1.ErrorInterceptor),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
 ], AuthController);

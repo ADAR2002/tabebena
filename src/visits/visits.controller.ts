@@ -11,6 +11,7 @@ import {
   HttpStatus,
   HttpCode,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { VisitsService } from './visits.service';
@@ -26,8 +27,10 @@ import {
   ApiUpdateVisit
 } from './decorators/swagger.decorators';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { ResponseInterceptor, ErrorInterceptor } from '../common/interceptors';
 @ApiTags('visits')
 @UseGuards(JwtAuthGuard)
+@UseInterceptors(ResponseInterceptor, ErrorInterceptor)
 @Controller('visits')
 export class VisitsController {
   constructor(private readonly visitsService: VisitsService) {}

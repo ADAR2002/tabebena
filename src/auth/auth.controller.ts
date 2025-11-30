@@ -2,6 +2,7 @@ import { Controller, Post, Body, UseGuards, Get, Request, UnauthorizedException,
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { ResponseInterceptor, ErrorInterceptor } from '../common/interceptors';
 import { RequestOtpDto } from './dto/otp-request.dto';
 import { LoginCredentialsDto, RegisterCredentialsDto } from './dto/auth-credentials.dto';
 import { 
@@ -17,6 +18,7 @@ import { UpdateDoctorProfileDto } from './dto/update-doctor-profile.dto';
 
 
 @ApiTagsAuth()
+@UseInterceptors(ResponseInterceptor, ErrorInterceptor)
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

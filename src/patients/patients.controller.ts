@@ -11,6 +11,7 @@ import {
   Request,
   DefaultValuePipe,
   ParseIntPipe,
+  UseInterceptors,
 } from '@nestjs/common';
 import { PatientsService } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
@@ -27,9 +28,11 @@ import {
   ApiDeletePatientByPhone,
 } from './decorators/swagger.decorators';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { ResponseInterceptor, ErrorInterceptor } from '../common/interceptors';
 
 @ApiPatientController()
 @UseGuards(JwtAuthGuard)
+@UseInterceptors(ResponseInterceptor, ErrorInterceptor)
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
