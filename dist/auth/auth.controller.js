@@ -20,6 +20,7 @@ const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const interceptors_1 = require("../common/interceptors");
 const otp_request_dto_1 = require("./dto/otp-request.dto");
 const auth_credentials_dto_1 = require("./dto/auth-credentials.dto");
+const refresh_token_dto_1 = require("./dto/refresh-token.dto");
 const swagger_decorators_1 = require("./decorators/swagger.decorators");
 const update_doctor_profile_dto_1 = require("./dto/update-doctor-profile.dto");
 let AuthController = class AuthController {
@@ -50,6 +51,12 @@ let AuthController = class AuthController {
     }
     async setProfileComplete(req, profileComplete) {
         return this.authService.setDoctorProfileComplete(req.user.userId, profileComplete);
+    }
+    async refreshTokens(refreshTokenDto) {
+        return this.authService.refreshTokens(refreshTokenDto.refreshToken);
+    }
+    async logout(req) {
+        return this.authService.logout(req.user.userId);
     }
 };
 exports.AuthController = AuthController;
@@ -121,6 +128,21 @@ __decorate([
     __metadata("design:paramtypes", [Object, Boolean]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "setProfileComplete", null);
+__decorate([
+    (0, common_1.Post)('refresh'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [refresh_token_dto_1.RefreshTokenDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "refreshTokens", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('logout'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "logout", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_decorators_1.ApiTagsAuth)(),
     (0, common_1.UseInterceptors)(interceptors_1.ResponseInterceptor, interceptors_1.ErrorInterceptor),

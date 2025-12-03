@@ -44,6 +44,15 @@ enum UserRole {
   ADMIN
 }
 
+enum BookingStatus {
+  AVAILABLE
+  BOOKED
+}
+
+enum BookedBy {
+  DOCTOR
+}
+
 // Models
 model User {
   id              String      @id @default(uuid())
@@ -57,6 +66,7 @@ model User {
   specialty       String?
   dateOfBirth     DateTime?
   gender          Gender?
+  refreshToken    String?
   
   // Relations
   clinicLocation  ClinicLocation?
@@ -213,3 +223,4 @@ model Review {
   @@index([userId])
   @@index([doctorUserId])
 }
+

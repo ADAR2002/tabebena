@@ -40,10 +40,8 @@ export class ScheduleService {
   }
 
   async create(createScheduleDto: CreateScheduleDto, userId: string): Promise<ScheduleResponseDto> {
-    // Validate time range
     this.validateTimeRange(createScheduleDto.startTime, createScheduleDto.endTime);
 
-    // Check if a schedule for this day already exists for this user
     const existingSchedule = await this.prisma.doctorSchedule.findFirst({
       where: {
         userId: userId,
@@ -55,7 +53,6 @@ export class ScheduleService {
       throw new ConflictException(`Schedule for ${createScheduleDto.dayOfWeek} already exists`);
     }
 
-    // Convert time strings to DateTime objects
     const startTime = this.parseTimeToDateTime(createScheduleDto.startTime);
     const endTime = this.parseTimeToDateTime(createScheduleDto.endTime);
 
@@ -102,10 +99,8 @@ export class ScheduleService {
     updateScheduleDto: UpdateScheduleDto,
     userId: string,
   ): Promise<ScheduleResponseDto> {
-    // Check if schedule exists and belongs to user
     const existingSchedule = await this.findOne(id, userId);
 
-    // If updating dayOfWeek, check for conflicts
     if (updateScheduleDto.dayOfWeek && updateScheduleDto.dayOfWeek !== existingSchedule.dayOfWeek) {
       const conflictSchedule = await this.prisma.doctorSchedule.findFirst({
         where: {
@@ -120,7 +115,6 @@ export class ScheduleService {
       }
     }
 
-    // Validate time range if both times are provided
     const startTime = updateScheduleDto.startTime || existingSchedule.startTime.toTimeString().slice(0, 5);
     const endTime = updateScheduleDto.endTime || existingSchedule.endTime.toTimeString().slice(0, 5);
     
@@ -128,7 +122,6 @@ export class ScheduleService {
       this.validateTimeRange(startTime, endTime);
     }
 
-    // Prepare update data
     const updateData: any = { ...updateScheduleDto };
     
     if (updateScheduleDto.startTime) {
@@ -148,7 +141,6 @@ export class ScheduleService {
   }
 
   async remove(id: string, userId: string): Promise<string> {
-    // Check if schedule exists and belongs to user
     await this.findOne(id, userId);
 
     await this.prisma.doctorSchedule.delete({

@@ -11,6 +11,7 @@ export declare class AuthService {
     constructor(jwtService: JwtService, supabaseService: SupabaseService, prisma: PrismaService);
     signUp(registerCredentialsDto: RegisterCredentialsDto): Promise<{
         accessToken: string;
+        refreshToken: string;
         user: User;
     }>;
     requestOtp(email: string): Promise<{
@@ -29,6 +30,7 @@ export declare class AuthService {
     }>;
     signIn(loginCredentialsDto: LoginCredentialsDto): Promise<{
         accessToken: string;
+        refreshToken: string;
         user: User;
     }>;
     validateUser(email: string, password: string): Promise<any>;
@@ -66,6 +68,7 @@ export declare class AuthService {
         gender: import("@prisma/client").$Enums.Gender | null;
         id: string;
         role: import("@prisma/client").$Enums.UserRole;
+        refreshToken: string | null;
         profileComplete: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -117,6 +120,7 @@ export declare class AuthService {
         gender: import("@prisma/client").$Enums.Gender | null;
         id: string;
         role: import("@prisma/client").$Enums.UserRole;
+        refreshToken: string | null;
         profileComplete: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -136,8 +140,16 @@ export declare class AuthService {
         gender: import("@prisma/client").$Enums.Gender | null;
         id: string;
         role: import("@prisma/client").$Enums.UserRole;
+        refreshToken: string | null;
         profileComplete: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;
+    private generateRefreshToken;
+    refreshTokens(refreshToken: string): Promise<{
+        accessToken: string;
+        refreshToken: string;
+        user: User;
+    }>;
+    logout(userId: string): Promise<void>;
 }

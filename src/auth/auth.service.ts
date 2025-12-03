@@ -11,7 +11,7 @@ import {
   RegisterCredentialsDto,
 } from "./dto/auth-credentials.dto";
 import { User, UserRole } from "@prisma/client";
-import { JWT_SECRET, JWT_EXPIRES_IN } from "./constants";
+import { JWT_SECRET, JWT_EXPIRES_IN, JWT_REFRESH_SECRET, JWT_REFRESH_EXPIRES_IN } from "./constants";
 import { SupabaseService } from "../supabase/supabase.service";
 import { UpdateDoctorProfileDto } from "./dto/update-doctor-profile.dto";
 @Injectable()
@@ -24,7 +24,7 @@ export class AuthService {
 
   async signUp(
     registerCredentialsDto: RegisterCredentialsDto
-  ): Promise<{ accessToken: string; user: User }> {
+  ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
     const { email, password, firstName, lastName, phone } =
       registerCredentialsDto;
 
@@ -56,7 +56,14 @@ export class AuthService {
       expiresIn: JWT_EXPIRES_IN,
     });
 
-    return { accessToken, user: user };
+    const refreshToken = this.generateRefreshToken(user);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken },
+    });
+
+    return { accessToken, refreshToken, user: user };
   }
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   async requestOtp(email: string) {
@@ -131,7 +138,7 @@ export class AuthService {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   async signIn(
     loginCredentialsDto: LoginCredentialsDto
-  ): Promise<{ accessToken: string; user: User }> {
+  ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
     const { email, password } = loginCredentialsDto;
 
     const user = await this.prisma.user.findUnique({
@@ -148,7 +155,14 @@ export class AuthService {
       expiresIn: JWT_EXPIRES_IN,
     });
 
-    return { accessToken, user };
+    const refreshToken = this.generateRefreshToken(user);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken },
+    });
+
+    return { accessToken, refreshToken, user };
   }
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   async validateUser(email: string, password: string): Promise<any> {
@@ -295,6 +309,54 @@ export class AuthService {
     return this.prisma.user.update({
       where: { id: userId },
       data: { profileComplete },
+    });
+  }
+
+  private generateRefreshToken(user: User): string {
+    const payload = { email: user.email, sub: user.id, role: user.role };
+    return this.jwtService.sign(payload, {
+      secret: JWT_REFRESH_SECRET,
+      expiresIn: JWT_REFRESH_EXPIRES_IN,
+    });
+  }
+
+  async refreshTokens(refreshToken: string): Promise<{ accessToken: string; refreshToken: string; user: User }> {
+    try {
+      const decoded = this.jwtService.verify(refreshToken, {
+        secret: JWT_REFRESH_SECRET,
+      });
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: decoded.sub },
+      });
+
+      if (!user || user.refreshToken !== refreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const payload = { email: user.email, sub: user.id, role: user.role };
+      const accessToken = this.jwtService.sign(payload, {
+        secret: JWT_SECRET,
+        expiresIn: JWT_EXPIRES_IN,
+      });
+
+      const newRefreshToken = this.generateRefreshToken(user);
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { refreshToken: newRefreshToken },
+      });
+
+      return { accessToken, refreshToken: newRefreshToken, user };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
+
+  async logout(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null },
     });
   }
 }

@@ -48,8 +48,8 @@ export class VisitsService {
         prescription: createVisitDto.prescription,
         vitalSigns: createVisitDto.vitalSigns,
         notes: createVisitDto.notes,
-        consultationFee: createVisitDto.consultationFee || 0, // Provide a default value
-        paidAmount: createVisitDto.paidAmount || 0, // Provide a default value
+        consultationFee: createVisitDto.consultationFee || 0,
+        paidAmount: createVisitDto.paidAmount || 0,
       },
     });
 
@@ -90,7 +90,6 @@ export class VisitsService {
     id: string,
     updateVisitDto: UpdateVisitDto
   ): Promise<VisitResponseDto> {
-    // Check if visit exists
     const visit = await this.findOne(id);
     if (!visit) {
       throw new NotFoundException(`Visit with ID ${id} not found`);
@@ -104,7 +103,6 @@ export class VisitsService {
   }
 
   async remove(id: string): Promise<String> {
-    // Check if visit exists
     const visit = await this.findOne(id);
     if (!visit) {
       throw new NotFoundException(`Visit with ID ${id} not found`);
@@ -116,17 +114,15 @@ export class VisitsService {
   }
 
   async getPatientVisits(phone: string): Promise<VisitResponseDto[]> {
-    // First, find the patient by phone number
     const patient = await this.prisma.patient.findFirst({
       where: { phone },
       select: { id: true },
     });
 
     if (!patient) {
-      return []; // Return empty array if no patient found with this phone
+      return [];
     }
 
-    // Then find all visits for this patient
     const visits = await this.prisma.visit.findMany({
       where: { patientId: patient.id },
       orderBy: { visitDate: "desc" },

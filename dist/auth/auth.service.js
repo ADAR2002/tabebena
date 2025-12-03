@@ -84,7 +84,12 @@ let AuthService = class AuthService {
             secret: constants_1.JWT_SECRET,
             expiresIn: constants_1.JWT_EXPIRES_IN,
         });
-        return { accessToken, user: user };
+        const refreshToken = this.generateRefreshToken(user);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { refreshToken },
+        });
+        return { accessToken, refreshToken, user: user };
     }
     async requestOtp(email) {
         try {
@@ -155,7 +160,12 @@ let AuthService = class AuthService {
             secret: constants_1.JWT_SECRET,
             expiresIn: constants_1.JWT_EXPIRES_IN,
         });
-        return { accessToken, user };
+        const refreshToken = this.generateRefreshToken(user);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { refreshToken },
+        });
+        return { accessToken, refreshToken, user };
     }
     async validateUser(email, password) {
         const user = await this.prisma.user.findUnique({
@@ -271,6 +281,46 @@ let AuthService = class AuthService {
         return this.prisma.user.update({
             where: { id: userId },
             data: { profileComplete },
+        });
+    }
+    generateRefreshToken(user) {
+        const payload = { email: user.email, sub: user.id, role: user.role };
+        return this.jwtService.sign(payload, {
+            secret: constants_1.JWT_REFRESH_SECRET,
+            expiresIn: constants_1.JWT_REFRESH_EXPIRES_IN,
+        });
+    }
+    async refreshTokens(refreshToken) {
+        try {
+            const decoded = this.jwtService.verify(refreshToken, {
+                secret: constants_1.JWT_REFRESH_SECRET,
+            });
+            const user = await this.prisma.user.findUnique({
+                where: { id: decoded.sub },
+            });
+            if (!user || user.refreshToken !== refreshToken) {
+                throw new common_1.UnauthorizedException('Invalid refresh token');
+            }
+            const payload = { email: user.email, sub: user.id, role: user.role };
+            const accessToken = this.jwtService.sign(payload, {
+                secret: constants_1.JWT_SECRET,
+                expiresIn: constants_1.JWT_EXPIRES_IN,
+            });
+            const newRefreshToken = this.generateRefreshToken(user);
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { refreshToken: newRefreshToken },
+            });
+            return { accessToken, refreshToken: newRefreshToken, user };
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException('Invalid or expired refresh token');
+        }
+    }
+    async logout(userId) {
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { refreshToken: null },
         });
     }
 };

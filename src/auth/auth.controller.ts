@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ResponseInterceptor, ErrorInterceptor } from '../common/interceptors';
 import { RequestOtpDto } from './dto/otp-request.dto';
 import { LoginCredentialsDto, RegisterCredentialsDto } from './dto/auth-credentials.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { 
   ApiTagsAuth, 
   VerifyOtpAndSignUpDoc, 
@@ -97,5 +98,16 @@ export class AuthController {
     @Body('profileComplete') profileComplete: boolean,
   ) {
     return this.authService.setDoctorProfileComplete(req.user.userId, profileComplete);
+  }
+
+  @Post('refresh')
+  async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshTokens(refreshTokenDto.refreshToken);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Request() req) {
+    return this.authService.logout(req.user.userId);
   }
 }

@@ -1,0 +1,46 @@
+### Test Refresh Token Flow
+
+### 1. Sign Up (creates user with refresh token)
+POST http://localhost:3000/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123",
+  "firstName": "Test",
+  "lastName": "User",
+  "phone": "+1234567890"
+}
+
+###
+
+### 2. Sign In (returns access and refresh tokens)
+POST http://localhost:3000/auth/signin
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+###
+
+### 3. Refresh Access Token
+POST http://localhost:3000/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
+
+###
+
+### 4. Logout (requires JWT auth)
+POST http://localhost:3000/auth/logout
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### 5. Get Profile (requires JWT auth)
+GET http://localhost:3000/auth/profile
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE

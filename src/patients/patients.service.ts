@@ -74,7 +74,6 @@ export class PatientsService {
     doctorId: string,
     updatePatientDto: UpdatePatientDto
   ): Promise<Patient> {
-    // First find the patient to get the ID
     const patient = await this.findOne(phone, doctorId);
 
     return this.prisma.patient.update({
@@ -84,7 +83,7 @@ export class PatientsService {
   }
 
   async remove(phone: string, doctorId: string): Promise<void> {
-    // First find the patient to get the ID
+    
     const patient = await this.findOne(phone, doctorId);
 
     await this.prisma.patient.delete({
