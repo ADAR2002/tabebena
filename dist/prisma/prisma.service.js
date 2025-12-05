@@ -12,11 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
-const dotenv_1 = require("dotenv");
-(0, dotenv_1.config)();
+const config_1 = require("@nestjs/config");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
-    constructor() {
-        const databaseUrl = process.env.DATABASE_URL;
+    configService;
+    constructor(configService) {
+        const databaseUrl = configService.get('DATABASE_URL');
         if (!databaseUrl) {
             throw new Error('DATABASE_URL environment variable is not set');
         }
@@ -27,6 +27,7 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
                 },
             },
         });
+        this.configService = configService;
     }
     async onModuleInit() {
         await this.$connect();
@@ -41,6 +42,6 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
+    __metadata("design:paramtypes", [config_1.ConfigService])
 ], PrismaService);
 //# sourceMappingURL=prisma.service.js.map

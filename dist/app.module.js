@@ -10,6 +10,8 @@ exports.AppModule = void 0;
 const config_1 = require("@nestjs/config");
 const common_1 = require("@nestjs/common");
 const prisma_module_1 = require("./prisma/prisma.module");
+const supabase_module_1 = require("./supabase/supabase.module");
+const database_module_1 = require("./database/database.module");
 const auth_module_1 = require("./auth/auth.module");
 const patients_module_1 = require("./patients/patients.module");
 const visits_module_1 = require("./visits/visits.module");
@@ -25,6 +27,8 @@ exports.AppModule = AppModule = __decorate([
                 envFilePath: '.env',
             }),
             prisma_module_1.PrismaModule,
+            supabase_module_1.SupabaseModule,
+            database_module_1.DatabaseModule,
             auth_module_1.AuthModule,
             patients_module_1.PatientsModule,
             visits_module_1.VisitsModule,

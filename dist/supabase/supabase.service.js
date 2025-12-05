@@ -76,6 +76,37 @@ let SupabaseService = SupabaseService_1 = class SupabaseService {
     getClient() {
         return this.supabase;
     }
+    async create(table, data) {
+        return this.supabase.from(table).insert(data).select().single();
+    }
+    async findById(table, id) {
+        return this.supabase.from(table).select('*').eq('id', id).single();
+    }
+    async findOne(table, query) {
+        let qb = this.supabase.from(table).select('*');
+        Object.entries(query).forEach(([key, value]) => {
+            qb = qb.eq(key, value);
+        });
+        return qb.single();
+    }
+    async findMany(table, query) {
+        let qb = this.supabase.from(table).select('*');
+        if (query) {
+            Object.entries(query).forEach(([key, value]) => {
+                qb = qb.eq(key, value);
+            });
+        }
+        return qb;
+    }
+    async update(table, id, data) {
+        return this.supabase.from(table).update(data).eq('id', id).select().single();
+    }
+    async delete(table, id) {
+        return this.supabase.from(table).delete().eq('id', id).select().single();
+    }
+    async transaction(callback) {
+        return callback(this.supabase);
+    }
 };
 exports.SupabaseService = SupabaseService;
 __decorate([

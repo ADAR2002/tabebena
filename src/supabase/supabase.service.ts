@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { EmailOtpType } from '@supabase/supabase-js';
+import type { EmailOtpType, PostgrestError } from '@supabase/supabase-js';
 import {ApiResponse } from '@nestjs/swagger';
 import { VerifyOtpResponseDto } from './dto/verify_otp_response.dto';
 
@@ -100,5 +100,52 @@ export class SupabaseService implements OnModuleInit {
 
   getClient() {
     return this.supabase;
+  }
+
+  // Generic database operations
+  async create<T>(table: string, data: Partial<T>): Promise<{ data: T | null; error: PostgrestError | null }> {
+    return this.supabase.from(table).insert(data).select().single();
+  }
+
+  async findById<T>(table: string, id: string): Promise<{ data: T | null; error: PostgrestError | null }> {
+    return this.supabase.from(table).select('*').eq('id', id).single();
+  }
+
+  async findOne<T>(table: string, query: Record<string, any>): Promise<{ data: T | null; error: PostgrestError | null }> {
+    let qb = this.supabase.from(table).select('*');
+    
+    Object.entries(query).forEach(([key, value]) => {
+      qb = qb.eq(key, value);
+    });
+    
+    return qb.single();
+  }
+
+  async findMany<T>(table: string, query?: Record<string, any>): Promise<{ data: T[] | null; error: PostgrestError | null }> {
+    let qb = this.supabase.from(table).select('*');
+    
+    if (query) {
+      Object.entries(query).forEach(([key, value]) => {
+        qb = qb.eq(key, value);
+      });
+    }
+    
+    return qb;
+  }
+
+  async update<T>(table: string, id: string, data: Partial<T>): Promise<{ data: T | null; error: PostgrestError | null }> {
+    return this.supabase.from(table).update(data).eq('id', id).select().single();
+  }
+
+  async delete<T>(table: string, id: string): Promise<{ data: T | null; error: PostgrestError | null }> {
+    return this.supabase.from(table).delete().eq('id', id).select().single();
+  }
+
+  // Transaction support (using RPC functions in Supabase)
+  async transaction<T>(callback: (supabase: SupabaseClient) => Promise<T>): Promise<T> {
+    // Note: Supabase doesn't have built-in transactions like Prisma
+    // For complex transactions, you should create RPC functions in Supabase
+    // This is a placeholder for simple operations
+    return callback(this.supabase);
   }
 }
