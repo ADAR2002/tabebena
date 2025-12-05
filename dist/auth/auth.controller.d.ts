@@ -25,42 +25,42 @@ export declare class AuthController {
     }>;
     getUserProfile(req: any): Promise<({
         certificates: {
+            title: string;
             id: string;
-            userId: string;
             createdAt: Date;
             year: number;
-            title: string;
+            userId: string;
             institution: string;
             imageUrl: string;
         }[];
         clinicImages: {
             id: string;
-            userId: string;
             createdAt: Date;
             displayOrder: number;
+            userId: string;
             imageUrl: string;
             caption: string | null;
             isPrimary: boolean;
         }[];
     } & {
         specialty: string | null;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        dateOfBirth: Date | null;
-        gender: import("@prisma/client").$Enums.Gender | null;
-        phone: string;
-        consultationFee: number | null;
         email: string;
+        phone: string;
+        id: string;
         password: string;
         firstName: string;
         lastName: string;
         bio: string | null;
+        consultationFee: number | null;
+        experienceYears: number | null;
+        profilePhotoUrl: string | null;
+        dateOfBirth: Date | null;
+        gender: import("@prisma/client").$Enums.Gender | null;
         role: import("@prisma/client").$Enums.UserRole;
         refreshToken: string | null;
         profileComplete: boolean;
-        experienceYears: number | null;
-        profilePhotoUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }) | null>;
     updateDoctorProfile(req: any, updateProfileDto: UpdateDoctorProfileDto, files?: {
         profilePhoto?: File[];
@@ -69,9 +69,6 @@ export declare class AuthController {
     }): Promise<{
         clinicLocation: {
             id: string;
-            userId: string;
-            createdAt: Date;
-            updatedAt: Date;
             address: string;
             city: string;
             latitude: number;
@@ -79,64 +76,67 @@ export declare class AuthController {
             region: string | null;
             clinicName: string | null;
             clinicPhone: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
         } | null;
         certificates: {
+            title: string;
             id: string;
-            userId: string;
             createdAt: Date;
             year: number;
-            title: string;
+            userId: string;
             institution: string;
             imageUrl: string;
         }[];
         clinicImages: {
             id: string;
-            userId: string;
             createdAt: Date;
             displayOrder: number;
+            userId: string;
             imageUrl: string;
             caption: string | null;
             isPrimary: boolean;
         }[];
     } & {
         specialty: string | null;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        dateOfBirth: Date | null;
-        gender: import("@prisma/client").$Enums.Gender | null;
-        phone: string;
-        consultationFee: number | null;
         email: string;
+        phone: string;
+        id: string;
         password: string;
         firstName: string;
         lastName: string;
         bio: string | null;
+        consultationFee: number | null;
+        experienceYears: number | null;
+        profilePhotoUrl: string | null;
+        dateOfBirth: Date | null;
+        gender: import("@prisma/client").$Enums.Gender | null;
         role: import("@prisma/client").$Enums.UserRole;
         refreshToken: string | null;
         profileComplete: boolean;
-        experienceYears: number | null;
-        profilePhotoUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     setProfileComplete(req: any, profileComplete: boolean): Promise<{
         specialty: string | null;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        dateOfBirth: Date | null;
-        gender: import("@prisma/client").$Enums.Gender | null;
-        phone: string;
-        consultationFee: number | null;
         email: string;
+        phone: string;
+        id: string;
         password: string;
         firstName: string;
         lastName: string;
         bio: string | null;
+        consultationFee: number | null;
+        experienceYears: number | null;
+        profilePhotoUrl: string | null;
+        dateOfBirth: Date | null;
+        gender: import("@prisma/client").$Enums.Gender | null;
         role: import("@prisma/client").$Enums.UserRole;
         refreshToken: string | null;
         profileComplete: boolean;
-        experienceYears: number | null;
-        profilePhotoUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     refreshTokens(refreshTokenDto: RefreshTokenDto): Promise<{
         accessToken: string;
