@@ -6,8 +6,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from '../common/strategies/jwt.strategy';
 import { JWT_SECRET, JWT_EXPIRES_IN } from './constants';
-import { SupabaseModule } from '../supabase/supabase.module';
 import { ConfigModule } from '@nestjs/config';
+import { SupabaseModule } from 'src/supabase/supabase.module';
 
 @Module({
   imports: [

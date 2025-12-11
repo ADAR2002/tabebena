@@ -32,6 +32,8 @@ class RegisterCredentialsDto {
     firstName;
     lastName;
     phone;
+    isDoctor;
+    specialtyId;
 }
 exports.RegisterCredentialsDto = RegisterCredentialsDto;
 __decorate([
@@ -61,4 +63,14 @@ __decorate([
     (0, class_validator_1.Matches)(/^[0-9]{10}$/, { message: 'Phone number must be 10 digits' }),
     __metadata("design:type", String)
 ], RegisterCredentialsDto.prototype, "phone", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], RegisterCredentialsDto.prototype, "isDoctor", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], RegisterCredentialsDto.prototype, "specialtyId", void 0);
 //# sourceMappingURL=auth-credentials.dto.js.map

@@ -8,11 +8,16 @@ CREATE TABLE "User" (
     "phone" TEXT NOT NULL,
     "bio" TEXT,
     "role" TEXT NOT NULL,
-    "specialtyId" TEXT,
+    "specialty" TEXT,
+    "dateOfBirth" DATETIME,
+    "gender" TEXT,
+    "refreshToken" TEXT,
     "profileComplete" BOOLEAN NOT NULL DEFAULT false,
+    "consultationFee" REAL,
+    "experienceYears" INTEGER,
+    "profilePhotoUrl" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "User_specialtyId_fkey" FOREIGN KEY ("specialtyId") REFERENCES "Specialty" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
@@ -31,6 +36,9 @@ CREATE TABLE "ClinicLocation" (
     "latitude" REAL NOT NULL,
     "longitude" REAL NOT NULL,
     "city" TEXT NOT NULL,
+    "region" TEXT,
+    "clinicName" TEXT,
+    "clinicPhone" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "ClinicLocation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
@@ -94,13 +102,15 @@ CREATE TABLE "Patient" (
 CREATE TABLE "Visit" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "patientId" TEXT NOT NULL,
-    "visitDate" DATETIME NOT NULL,
+    "visitDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "reason" TEXT,
     "diagnosis" TEXT,
     "treatment" TEXT,
     "prescription" TEXT,
+    "vitalSigns" TEXT,
+    "notes" TEXT,
     "consultationFee" REAL NOT NULL,
     "paidAmount" REAL NOT NULL,
-    "notes" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "Visit_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "Patient" ("id") ON DELETE CASCADE ON UPDATE CASCADE

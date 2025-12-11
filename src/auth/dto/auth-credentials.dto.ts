@@ -1,4 +1,4 @@
-import { IsEmail, IsString, IsNotEmpty, MinLength, Matches } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, MinLength, Matches, IsBoolean, IsOptional } from 'class-validator';
 
 export class LoginCredentialsDto {
   @IsEmail()
@@ -33,4 +33,11 @@ export class RegisterCredentialsDto {
   @Matches(/^[0-9]{10}$/, { message: 'Phone number must be 10 digits' })
   phone: string;
 
+  @IsBoolean()
+  @IsOptional()
+  isDoctor?: boolean;
+
+  @IsString()
+  @IsOptional()
+  specialtyId?: string;
 }

@@ -15,8 +15,8 @@ const auth_service_1 = require("./auth.service");
 const auth_controller_1 = require("./auth.controller");
 const jwt_strategy_1 = require("../common/strategies/jwt.strategy");
 const constants_1 = require("./constants");
-const supabase_module_1 = require("../supabase/supabase.module");
 const config_1 = require("@nestjs/config");
+const supabase_module_1 = require("../supabase/supabase.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;

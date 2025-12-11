@@ -52,12 +52,12 @@ const constants_1 = require("./constants");
 const supabase_service_1 = require("../supabase/supabase.service");
 let AuthService = class AuthService {
     jwtService;
-    supabaseService;
     prisma;
-    constructor(jwtService, supabaseService, prisma) {
+    supabase;
+    constructor(jwtService, prisma, supabase) {
         this.jwtService = jwtService;
-        this.supabaseService = supabaseService;
         this.prisma = prisma;
+        this.supabase = supabase;
     }
     async signUp(registerCredentialsDto) {
         const { email, password, firstName, lastName, phone } = registerCredentialsDto;
@@ -93,58 +93,72 @@ let AuthService = class AuthService {
     }
     async requestOtp(email) {
         try {
-            await this.supabaseService.sendOtp(email);
+            const existingUser = await this.prisma.user.findUnique({
+                where: { email },
+            });
+            if (existingUser) {
+                throw new common_1.ConflictException("User with this email already exists");
+            }
+            const data = await this.supabase.sendOtp(email);
             return { message: "OTP sent successfully" };
         }
         catch (error) {
-            throw new Error(`Failed to send OTP: ${error.message}`);
+            throw new common_1.BadRequestException(`Failed to send OTP: ${error.message}`);
         }
     }
     async verifyOtpAndCreateUser(verifyOtpDto, registerCredentialsDto) {
         const { email, otp } = verifyOtpDto;
-        const { password, firstName, lastName, phone } = registerCredentialsDto;
-        const { accessToken, user } = await this.verifyOtp(email, otp);
-        const existingUser = await this.prisma.user.findUnique({
-            where: { email },
-        });
-        if (existingUser) {
-            throw new common_1.ConflictException("User with this email already exists");
+        try {
+            const data = await this.supabase.verifyOtp(email, otp);
+            const existingUser = await this.prisma.user.findUnique({
+                where: { email },
+            });
+            if (existingUser) {
+                throw new common_1.ConflictException("User with this email already exists");
+            }
+            const { email: userEmail, password, firstName, lastName, phone, isDoctor, specialtyId } = registerCredentialsDto;
+            const salt = await bcrypt.genSalt();
+            const hashedPassword = await bcrypt.hash(password, salt);
+            let specialty = null;
+            if (isDoctor && specialtyId) {
+                const specialtyRecord = await this.prisma.specialty.findUnique({
+                    where: { id: specialtyId },
+                });
+                specialty = specialtyRecord?.name || null;
+            }
+            const user = await this.prisma.user.create({
+                data: {
+                    email: userEmail,
+                    password: hashedPassword,
+                    firstName,
+                    lastName,
+                    phone,
+                    role: isDoctor ? client_1.UserRole.DOCTOR : client_1.UserRole.PATIENT,
+                    specialty,
+                },
+            });
+            const payload = { email: user.email, sub: user.id, role: user.role };
+            const accessToken = this.jwtService.sign(payload, {
+                secret: constants_1.JWT_SECRET,
+                expiresIn: constants_1.JWT_EXPIRES_IN,
+            });
+            const refreshToken = this.generateRefreshToken(user);
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { refreshToken },
+            });
+            return { accessToken, refreshToken, user };
         }
-        const salt = await bcrypt.genSalt();
-        const hashedPassword = await bcrypt.hash(password, salt);
-        const createdUser = await this.prisma.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-                firstName,
-                lastName,
-                phone,
-                role: client_1.UserRole.DOCTOR,
-            },
-        });
-        return { accessToken, user: createdUser };
+        catch (error) {
+            throw new common_1.BadRequestException(`Failed to verify OTP and create user: ${error.message}`);
+        }
     }
     async verifyOtp(email, token) {
         try {
-            const { session } = await this.supabaseService.verifyOtp(email, token);
-            if (!session) {
-                throw new common_1.UnauthorizedException("Invalid or expired OTP");
-            }
-            const payload = {
-                email: session.user.email,
-                sub: session.user.id,
-            };
-            const accessToken = this.jwtService.sign(payload);
-            return {
-                accessToken,
-                user: {
-                    id: session.user.id,
-                    email: session.user.email,
-                },
-            };
+            return { success: true };
         }
         catch (error) {
-            throw new Error(`OTP verification failed: ${error.message}`);
+            throw new common_1.BadRequestException(`Failed to verify OTP: ${error.message}`);
         }
     }
     async signIn(loginCredentialsDto) {
@@ -177,19 +191,6 @@ let AuthService = class AuthService {
         }
         return null;
     }
-    async getUserProfile(userId) {
-        return this.prisma.user.findUnique({
-            where: { id: userId },
-            include: {
-                certificates: {
-                    orderBy: { createdAt: "desc" },
-                },
-                clinicImages: {
-                    orderBy: { displayOrder: "asc" },
-                },
-            },
-        });
-    }
     async updateDoctorProfile(userId, updateProfileDto) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
@@ -214,15 +215,32 @@ let AuthService = class AuthService {
             updateData.gender = updateProfileDto.gender;
         }
         if (updateProfileDto.clinicLocation) {
-            const { address, city, latitude, longitude, region, clinicName, clinicPhone } = updateProfileDto.clinicLocation;
+            const { address, city, latitude, longitude, region, clinicName, clinicPhone, } = updateProfileDto.clinicLocation;
             updateData.clinicLocation = {
                 upsert: {
-                    create: { address, city, latitude, longitude, region, clinicName, clinicPhone },
-                    update: { address, city, latitude, longitude, region, clinicName, clinicPhone }
-                }
+                    create: {
+                        address,
+                        city,
+                        latitude,
+                        longitude,
+                        region,
+                        clinicName,
+                        clinicPhone,
+                    },
+                    update: {
+                        address,
+                        city,
+                        latitude,
+                        longitude,
+                        region,
+                        clinicName,
+                        clinicPhone,
+                    },
+                },
             };
         }
-        if (updateProfileDto.certificates && updateProfileDto.certificates.length > 0) {
+        if (updateProfileDto.certificates &&
+            updateProfileDto.certificates.length > 0) {
             await this.prisma.certificate.deleteMany({ where: { userId } });
             updateData.certificates = {
                 create: updateProfileDto.certificates.map((url) => ({
@@ -233,7 +251,8 @@ let AuthService = class AuthService {
                 })),
             };
         }
-        if (updateProfileDto.clinicImages && updateProfileDto.clinicImages.length > 0) {
+        if (updateProfileDto.clinicImages &&
+            updateProfileDto.clinicImages.length > 0) {
             await this.prisma.clinicImage.deleteMany({ where: { userId } });
             updateData.clinicImages = {
                 create: updateProfileDto.clinicImages.map((url) => ({
@@ -271,18 +290,6 @@ let AuthService = class AuthService {
             },
         });
     }
-    async setDoctorProfileComplete(userId, profileComplete) {
-        const user = await this.prisma.user.findUnique({
-            where: { id: userId },
-        });
-        if (!user || user.role !== client_1.UserRole.DOCTOR) {
-            throw new common_1.UnauthorizedException("Only doctors can update profile");
-        }
-        return this.prisma.user.update({
-            where: { id: userId },
-            data: { profileComplete },
-        });
-    }
     generateRefreshToken(user) {
         const payload = { email: user.email, sub: user.id, role: user.role };
         return this.jwtService.sign(payload, {
@@ -299,7 +306,7 @@ let AuthService = class AuthService {
                 where: { id: decoded.sub },
             });
             if (!user || user.refreshToken !== refreshToken) {
-                throw new common_1.UnauthorizedException('Invalid refresh token');
+                throw new common_1.UnauthorizedException("Invalid refresh token");
             }
             const payload = { email: user.email, sub: user.id, role: user.role };
             const accessToken = this.jwtService.sign(payload, {
@@ -314,7 +321,7 @@ let AuthService = class AuthService {
             return { accessToken, refreshToken: newRefreshToken, user };
         }
         catch (error) {
-            throw new common_1.UnauthorizedException('Invalid or expired refresh token');
+            throw new common_1.UnauthorizedException("Invalid or expired refresh token");
         }
     }
     async logout(userId) {
@@ -328,7 +335,7 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [jwt_1.JwtService,
-        supabase_service_1.SupabaseService,
-        prisma_service_1.PrismaService])
+        prisma_service_1.PrismaService,
+        supabase_service_1.SupabaseService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

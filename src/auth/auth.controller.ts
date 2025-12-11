@@ -11,7 +11,6 @@ import {
   VerifyOtpAndSignUpDoc, 
   SignUpDoc, 
   SignInDoc, 
-  GetProfileDoc, 
   UpdateDoctorProfileDoc, 
   RequestOtpDoc
 } from './decorators/swagger.decorators';
@@ -58,13 +57,6 @@ export class AuthController {
     return this.authService.signIn(authCredentialsDto);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  @GetProfileDoc()
-  async getUserProfile(@Request() req) {
-    return this.authService.getUserProfile(req.user.userId);
-  }
-
   @Patch('doctor/profile')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
@@ -90,16 +82,6 @@ export class AuthController {
       updateProfileDto
     );
   }
-
-  @UseGuards(JwtAuthGuard)
-  @Patch('doctor/profile-complete')
-  async setProfileComplete(
-    @Request() req,
-    @Body('profileComplete') profileComplete: boolean,
-  ) {
-    return this.authService.setDoctorProfileComplete(req.user.userId, profileComplete);
-  }
-
   @Post('refresh')
   async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshTokens(refreshTokenDto.refreshToken);

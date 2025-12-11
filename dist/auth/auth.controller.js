@@ -43,14 +43,8 @@ let AuthController = class AuthController {
     async login(authCredentialsDto) {
         return this.authService.signIn(authCredentialsDto);
     }
-    async getUserProfile(req) {
-        return this.authService.getUserProfile(req.user.userId);
-    }
     async updateDoctorProfile(req, updateProfileDto, files = {}) {
         return this.authService.updateDoctorProfile(req.user.userId, updateProfileDto);
-    }
-    async setProfileComplete(req, profileComplete) {
-        return this.authService.setDoctorProfileComplete(req.user.userId, profileComplete);
     }
     async refreshTokens(refreshTokenDto) {
         return this.authService.refreshTokens(refreshTokenDto.refreshToken);
@@ -95,15 +89,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Get)('profile'),
-    (0, swagger_decorators_1.GetProfileDoc)(),
-    __param(0, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "getUserProfile", null);
-__decorate([
     (0, common_1.Patch)('doctor/profile'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
@@ -119,15 +104,6 @@ __decorate([
     __metadata("design:paramtypes", [Object, update_doctor_profile_dto_1.UpdateDoctorProfileDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "updateDoctorProfile", null);
-__decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Patch)('doctor/profile-complete'),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Body)('profileComplete')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Boolean]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "setProfileComplete", null);
 __decorate([
     (0, common_1.Post)('refresh'),
     __param(0, (0, common_1.Body)()),
