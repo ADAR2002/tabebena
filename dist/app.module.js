@@ -18,6 +18,7 @@ const visits_module_1 = require("./visits/visits.module");
 const schedule_module_1 = require("./schedule/schedule.module");
 const users_module_1 = require("./users/users.module");
 const doctors_module_1 = require("./doctors/doctors.module");
+const appointments_module_1 = require("./appointments/appointments.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -37,7 +38,8 @@ exports.AppModule = AppModule = __decorate([
             schedule_module_1.ScheduleModule,
             users_module_1.UsersModule,
             doctors_module_1.DoctorsModule,
-            supabase_module_1.SupabaseModule
+            supabase_module_1.SupabaseModule,
+            appointments_module_1.AppointmentsModule
         ],
         controllers: [],
         providers: [],

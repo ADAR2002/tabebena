@@ -75,6 +75,7 @@ model User {
   schedules       DoctorSchedule[]
   patients        Patient[]    @relation("DoctorPatients")
   reviews         Review[]     @relation("DoctorReviews")
+  appointments    Appointment[] @relation("DoctorAppointments")
   givenReviews    Review[]     @relation("UserReviews")
   
   // Profile Status
@@ -176,6 +177,7 @@ model Patient {
   
   // Relations
   visits         Visit[]
+  appointments   Appointment[] @relation("PatientAppointments")
   
   // Timestamps
   createdAt      DateTime  @default(now())
@@ -225,3 +227,17 @@ model Review {
   @@index([doctorUserId])
 }
 
+model Appointment {
+  id           String   @id @default(uuid())
+  doctorId      String
+  patientId     String
+  doctor        User     @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient       Patient  @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  dateAndTime   DateTime
+  notes         String?
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  @@index([doctorId])
+  @@index([patientId])
+}

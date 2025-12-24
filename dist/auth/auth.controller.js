@@ -47,7 +47,7 @@ let AuthController = class AuthController {
         return this.authService.updateDoctorProfile(req.user.userId, updateProfileDto);
     }
     async refreshTokens(refreshTokenDto) {
-        return this.authService.refreshTokens(refreshTokenDto.refreshToken);
+        return this.authService.refreshTokens(refreshTokenDto);
     }
     async logout(req) {
         return this.authService.logout(req.user.userId);

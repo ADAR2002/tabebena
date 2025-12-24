@@ -4,6 +4,7 @@ import { LoginCredentialsDto, RegisterCredentialsDto } from "./dto/auth-credenti
 import { User } from "@prisma/client";
 import { UpdateDoctorProfileDto } from "./dto/update-doctor-profile.dto";
 import { SupabaseService } from "src/supabase/supabase.service";
+import { RefreshTokenDto } from "./dto/refresh-token.dto";
 export declare class AuthService {
     private jwtService;
     private prisma;
@@ -84,7 +85,7 @@ export declare class AuthService {
         updatedAt: Date;
     }>;
     private generateRefreshToken;
-    refreshTokens(refreshToken: string): Promise<{
+    refreshTokens(refreshToken: RefreshTokenDto): Promise<{
         accessToken: string;
         refreshToken: string;
         user: User;

@@ -9,6 +9,7 @@ import { VisitsModule } from "./visits/visits.module";
 import { ScheduleModule } from "./schedule/schedule.module";
 import { UsersModule } from "./users/users.module";
 import { DoctorsModule } from "./doctors/doctors.module";
+import { AppointmentsModule } from './appointments/appointments.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { DoctorsModule } from "./doctors/doctors.module";
     ScheduleModule,
     UsersModule,
     DoctorsModule,
-    SupabaseModule
+    SupabaseModule,
+    AppointmentsModule
   ],
   controllers: [],
   providers: [],

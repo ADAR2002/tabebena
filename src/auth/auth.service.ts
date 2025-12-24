@@ -20,6 +20,7 @@ import {
 } from "./constants";
 import { UpdateDoctorProfileDto } from "./dto/update-doctor-profile.dto";
 import { SupabaseService } from "src/supabase/supabase.service";
+import { RefreshTokenDto } from "./dto/refresh-token.dto";
 @Injectable()
 export class AuthService {
   constructor(
@@ -336,16 +337,16 @@ export class AuthService {
   private generateRefreshToken(user: User): string {
     const payload = { email: user.email, sub: user.id, role: user.role };
     return this.jwtService.sign(payload, {
-      secret: JWT_REFRESH_SECRET,
+      secret: process.env.JWT_REFRESH_SECRET,
       expiresIn: JWT_REFRESH_EXPIRES_IN,
     });
   }
 
   async refreshTokens(
-    refreshToken: string
+    refreshToken: RefreshTokenDto
   ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
-    try {
-      const decoded = this.jwtService.verify(refreshToken, {
+      if(!refreshToken) throw new BadRequestException("Refresh token is required");
+      const decoded = this.jwtService.verify(refreshToken.refreshToken, {
         secret: JWT_REFRESH_SECRET,
       });
 
@@ -353,7 +354,7 @@ export class AuthService {
         where: { id: decoded.sub },
       });
 
-      if (!user || user.refreshToken !== refreshToken) {
+      if (!user || user.refreshToken !== refreshToken.refreshToken) {
         throw new UnauthorizedException("Invalid refresh token");
       }
 
@@ -371,9 +372,7 @@ export class AuthService {
       });
 
       return { accessToken, refreshToken: newRefreshToken, user };
-    } catch (error) {
-      throw new UnauthorizedException("Invalid or expired refresh token");
-    }
+    
   }
 
   async logout(userId: string): Promise<void> {
