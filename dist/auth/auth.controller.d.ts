@@ -29,54 +29,54 @@ export declare class AuthController {
         certificates?: File[];
         clinicImages?: File[];
     }): Promise<{
-        certificates: {
-            title: string;
+        clinicLocation: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            address: string;
+            latitude: number;
+            longitude: number;
+            city: string;
+            region: string | null;
+            clinicName: string | null;
+            clinicPhone: string | null;
+        } | null;
+        certificates: {
+            id: string;
+            createdAt: Date;
+            userId: string;
+            title: string;
             institution: string;
             year: number;
             imageUrl: string;
-            createdAt: Date;
-            userId: string;
         }[];
         clinicImages: {
             id: string;
+            createdAt: Date;
+            userId: string;
             imageUrl: string;
             caption: string | null;
             isPrimary: boolean;
             displayOrder: number;
-            createdAt: Date;
-            userId: string;
         }[];
-        clinicLocation: {
-            id: string;
-            address: string;
-            city: string;
-            latitude: number;
-            longitude: number;
-            region: string | null;
-            clinicName: string | null;
-            clinicPhone: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-        } | null;
     } & {
-        id: string;
         email: string;
-        role: import("@prisma/client").$Enums.UserRole;
-        profileComplete: boolean;
+        phone: string;
+        specialty: string | null;
+        id: string;
         password: string;
         firstName: string;
         lastName: string;
-        phone: string;
-        profilePhotoUrl: string | null;
         bio: string | null;
-        specialty: string | null;
-        consultationFee: number | null;
-        experienceYears: number | null;
+        role: import("@prisma/client").$Enums.UserRole;
         dateOfBirth: Date | null;
         gender: import("@prisma/client").$Enums.Gender | null;
         refreshToken: string | null;
+        profileComplete: boolean;
+        consultationFee: number | null;
+        experienceYears: number | null;
+        profilePhotoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;

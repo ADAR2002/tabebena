@@ -29,26 +29,6 @@ export class AppointmentsService {
     return appointment;
   }
 
-  async getToday(doctorId: string) {
-    const now = new Date();
-    const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    
-    const appointments = await this.prisma.appointment.findMany({
-      where: {
-        doctorId: doctorId,
-        dateAndTime: { 
-          gte: now,
-          lte: next24Hours
-        },
-      },
-      include: { patient: true },
-      orderBy: {
-        dateAndTime: 'asc'
-      }
-    });
-    return appointments;
-  }
-
   async findOne(doctorId: string, id: string) {
     const appointment = await this.prisma.appointment.findUnique({
       where: { id },
@@ -82,15 +62,34 @@ export class AppointmentsService {
     if (!appointment) throw new NotFoundException("Appointment not found");
     if (appointment.doctorId !== doctorId)
       throw new UnauthorizedException("You can't access this appointment");
-    
+
     const updateData: any = {};
     if (body.dateAndTime) updateData.dateAndTime = body.dateAndTime;
     if (body.note !== undefined) updateData.notes = body.note;
-    
+
     const newAppointment = await this.prisma.appointment.update({
       where: { id },
       data: updateData,
     });
     return newAppointment;
+  }
+
+  async findByDate(doctorId: string, date: string) {
+    const now = new Date(date);
+    const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        doctorId: doctorId,
+        dateAndTime: {
+          gte: date,
+          lte: next24Hours,
+        },
+      },
+      include: { patient: true },
+      orderBy: {
+        dateAndTime: "asc",
+      },
+    });
+    return appointments;
   }
 }
