@@ -1,5 +1,5 @@
-import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { Gender, BloodType } from '@prisma/client';
+import { IsDateString, IsEnum, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Gender } from '@prisma/client';
 
 export class CreatePatientDto {
   @IsString()
@@ -18,15 +18,16 @@ export class CreatePatientDto {
   @IsNotEmpty()
   phone: string;
 
-  @IsEnum(BloodType)
+  @IsString()
   @IsOptional()
-  bloodType?: BloodType;
+  @IsIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+  bloodType?: string;
 
   @IsString()
   @IsOptional()
-  allergies?: string;
+  descriptons?: string;
 
   @IsString()
   @IsOptional()
-  medicalHistory?: string;
+  severity?: string;
 }

@@ -99,8 +99,8 @@ export class PatientsService {
     phone?: string
   ): Promise<PaginatedResult<Patient>> {
     const skip = (page - 1) * limit;
+
     const orConditions: any[] = [];
-    
     if (name) orConditions.push({ fullName: { contains: name } });
     if (phone) orConditions.push({ phone: { contains: phone } });
 
@@ -143,11 +143,60 @@ export class PatientsService {
         doctorUserId: doctorId,
       },
     });
+
     if (!patient) {
       throw new NotFoundException(`Patient with id ${id} not found`);
     }
+
     return this.decoratePatient(patient, doctorId);
   }
+
+  async findOne(phone: string, doctorId: string): Promise<Patient> {
+    const patient = await this.prisma.patient.findFirst({
+      where: {
+        phone: phone,
+        doctorUserId: doctorId,
+      },
+    });
+
+    if (!patient) {
+      throw new NotFoundException(`Patient with phone ${phone} not found`);
+    }
+
+    return this.decoratePatient(patient, doctorId);
+  }
+
+  async update(
+    phone: string,
+    doctorId: string,
+    updatePatientDto: UpdatePatientDto
+  ): Promise<Patient> {
+    const patient = await this.findOne(phone, doctorId);
+
+    const { bloodType, ...rest } = updatePatientDto;
+
+    const updated = await this.prisma.patient.update({
+      where: { id: patient.id, doctorUserId: doctorId },
+      data: {
+        ...rest,
+        ...(bloodType !== undefined && {
+          bloodType: this.mapBloodTypeToPrisma(bloodType),
+        }),
+      },
+    });
+    return this.decoratePatient(updated, doctorId);
+  }
+
+  async remove(phone: string, doctorId: string): Promise<void> {
+    
+    const patient = await this.findOne(phone, doctorId);
+
+    await this.prisma.patient.delete({
+      where: { id: patient.id, doctorUserId: doctorId },
+    });
+  }
+
+  // search logic consolidated into findAll
 
   async updateById(
     id: string,
@@ -160,6 +209,7 @@ export class PatientsService {
     if (!existing) {
       throw new NotFoundException(`Patient with id ${id} not found`);
     }
+
     const { bloodType, ...rest } = updatePatientDto;
     const updated = await this.prisma.patient.update({
       where: { id },

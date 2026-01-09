@@ -22,10 +22,6 @@ import {
   ApiPatientController,
   ApiCreatePatient,
   ApiFindAllPatients,
-  ApiSearchPatients,
-  ApiFindPatientByPhone,
-  ApiUpdatePatientByPhone,
-  ApiDeletePatientByPhone,
 } from './decorators/swagger.decorators';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { ResponseInterceptor, ErrorInterceptor } from '../common/interceptors';
@@ -53,66 +49,40 @@ export class PatientsController {
     @Request() req,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
-    @Query('search') search?: string,
+    @Query('name') name?: string,
+    @Query('phone') phone?: string,
   ): Promise<PaginatedResult<Patient>> {
-    if (search) {
-      const results = await this.patientsService.search(req.user.id, search);
-      return {
-        data: results,
-        meta: {
-          total: results.length,
-          page: 1,
-          limit: results.length,
-          totalPages: 1,
-        },
-      };
-    }
-    return this.patientsService.findAll(req.user.id, page, limit);
+    return this.patientsService.findAll(
+      req.user.userId,
+      page,
+      limit,
+      name,
+      phone,
+    );
   }
 
-  @Get('search')
-  @ApiSearchPatients()
-  async search(
+  @Get(':id')
+  async findOneById(
     @Request() req,
-    @Query('q') query: string,
-  ): Promise<PaginatedResult<Patient>> {
-    const results = await this.patientsService.search(req.user.id, query);
-    return {
-      data: results,
-      meta: {
-        total: results.length,
-        page: 1,
-        limit: results.length,
-        totalPages: 1,
-      },
-    };
-  }
-
-  @Get('phone/:phone')
-  @ApiFindPatientByPhone()
-  async findOneByPhone(
-    @Request() req,
-    @Param('phone') phone: string,
+    @Param('id') id: string,
   ): Promise<Patient> {
-    return this.patientsService.findOne(phone, req.user.id);
+    return this.patientsService.findById(req.user.userId, id);
   }
 
-  @Patch('phone/:phone')
-  @ApiUpdatePatientByPhone()
-  async updateByPhone(
+  @Patch(':id')
+  async updateById(
     @Request() req,
-    @Param('phone') phone: string,
+    @Param('id') id: string,
     @Body() updatePatientDto: UpdatePatientDto,
   ): Promise<Patient> {
-    return this.patientsService.update(phone, req.user.id, updatePatientDto);
+    return this.patientsService.updateById(id, req.user.userId, updatePatientDto);
   }
 
-  @Delete('phone/:phone')
-  @ApiDeletePatientByPhone()
-  async removeByPhone(
+  @Delete(':id')
+  async removeById(
     @Request() req,
-    @Param('phone') phone: string,
+    @Param('id') id: string,
   ): Promise<void> {
-    await this.patientsService.remove(phone, req.user.id);
+    await this.patientsService.removeById(id, req.user.userId);
   }
 }

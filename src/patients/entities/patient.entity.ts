@@ -1,4 +1,4 @@
-import { Gender, BloodType } from '@prisma/client';
+import { Gender } from '@prisma/client';
 
 export class Patient {
   id: string;
@@ -7,9 +7,11 @@ export class Patient {
   dateOfBirth: Date;
   gender: Gender;
   phone: string;
-  bloodType: BloodType | null;
-  allergies: string | null;
-  medicalHistory: string | null;
+  bloodType: string | null;
+  descriptons: string | null;
+  severity: string | null;
   createdAt: Date;
   updatedAt: Date;
+  nextAppointment?: Date | null;
+  lastSession?: Date | null;
 }

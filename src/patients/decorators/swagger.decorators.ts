@@ -54,9 +54,9 @@ export function ApiCreatePatient() {
             dateOfBirth: '1990-01-01',
             gender: 'MALE',
             phone: '0512345678',
-            bloodType: 'A_POSITIVE',
-            allergies: 'لا يوجد',
-            medicalHistory: 'لا يوجد'
+            bloodType: 'A+',
+            descriptons: 'لا يوجد',
+            severity: 'لا يوجد'
           }
         }
       }
@@ -70,7 +70,7 @@ export function ApiFindAllPatients() {
     ApiBearerAuth('JWT-auth'),
     ApiOperation({
       summary: 'عرض قائمة المرضى',
-      description: 'استرجاع قائمة المرضى مع الترقيم',
+      description: 'استرجاع قائمة المرضى مع الترقيم، مع دعم البحث بالاسم أو رقم الهاتف',
     }),
     ApiQuery({
       name: 'page',
@@ -87,10 +87,16 @@ export function ApiFindAllPatients() {
       description: 'عدد العناصر في الصفحة',
     }),
     ApiQuery({
-      name: 'search',
+      name: 'name',
       required: false,
       type: String,
-      description: 'بحث بالاسم أو رقم الهاتف',
+      description: 'بحث بالاسم (اختياري)',
+    }),
+    ApiQuery({
+      name: 'phone',
+      required: false,
+      type: String,
+      description: 'بحث برقم الهاتف (اختياري)',
     }),
     ApiResponse({ 
       status: 200, 
@@ -126,10 +132,16 @@ export function ApiSearchPatients() {
       description: 'بحث عن المرضى باستخدام الاسم أو رقم الهاتف',
     }),
     ApiQuery({ 
-      name: 'q', 
-      required: true, 
-      description: 'كلمة البحث (الاسم أو رقم الهاتف)',
+      name: 'name', 
+      required: false, 
+      description: 'الاسم (اختياري)',
       example: 'أحمد',
+    }),
+    ApiQuery({ 
+      name: 'phone', 
+      required: false, 
+      description: 'رقم الهاتف (اختياري)',
+      example: '0512345678',
     }),
     ApiResponse({ 
       status: 200, 
@@ -182,9 +194,11 @@ export function ApiFindPatientByPhone() {
             dateOfBirth: '1990-01-01T00:00:00.000Z',
             gender: 'MALE',
             phone: '0512345678',
-            bloodType: 'A_POSITIVE',
-            allergies: 'لا يوجد',
-            medicalHistory: 'لا يوجد',
+            bloodType: 'A+',
+            descriptons: 'لا يوجد',
+            severity: 'لا يوجد',
+            nextAppointment: '2026-01-15T14:00:00.000Z',
+            lastSession: '2025-12-28T10:00:00.000Z',
             createdAt: '2023-01-01T00:00:00.000Z',
             updatedAt: '2023-01-01T00:00:00.000Z'
           }
@@ -226,8 +240,9 @@ export function ApiUpdatePatientByPhone() {
           summary: 'تحديث بسيط',
           value: {
             fullName: 'أحمد محمد الجديد',
-            bloodType: 'B_POSITIVE',
-            medicalHistory: 'حساسية من البنسلين'
+            bloodType: 'B+',
+            descriptons: 'حساسية من البنسلين',
+            severity: 'معتدل'
           }
         }
       }
@@ -244,9 +259,11 @@ export function ApiUpdatePatientByPhone() {
             dateOfBirth: '1990-01-01T00:00:00.000Z',
             gender: 'MALE',
             phone: '0512345678',
-            bloodType: 'B_POSITIVE',
-            allergies: 'لا يوجد',
-            medicalHistory: 'حساسية من البنسلين',
+            bloodType: 'B+',
+            descriptons: 'حساسية من البنسلين',
+            severity: 'معتدل',
+            nextAppointment: '2026-01-15T14:00:00.000Z',
+            lastSession: '2025-12-28T10:00:00.000Z',
             createdAt: '2023-01-01T00:00:00.000Z',
             updatedAt: '2023-01-02T00:00:00.000Z'
           }
