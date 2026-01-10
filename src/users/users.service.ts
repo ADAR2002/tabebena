@@ -23,6 +23,7 @@ export class UsersService {
       specialty: user.specialty,
       profileComplete: user.profileComplete,
       profilePhotoUrl: user.profilePhotoUrl,
+      openCount:user.openCount, 
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
@@ -98,5 +99,13 @@ export class UsersService {
       where: { id },
     });
     return "User removed successfully";
+  }
+
+  async incrementOpenCount(userId: string) {
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: ({ openCount: { increment: 1 } } as any),
+    });
+    return { openCount: (updated as any).openCount ?? 0 };
   }
 }

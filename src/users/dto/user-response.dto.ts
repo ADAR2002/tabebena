@@ -32,6 +32,9 @@ export class UserResponseDto {
   @ApiProperty({ description: 'User profile photo URL', required: false })
   profilePhotoUrl?: string;
 
+  @ApiProperty({ description: 'User profile photo URL', required: false })
+  openCount?: Number;
+
   @ApiProperty({ description: 'Date when the user was created' })
   createdAt: Date;
 

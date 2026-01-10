@@ -73,6 +73,7 @@ export declare class AuthController {
         dateOfBirth: Date | null;
         gender: import("@prisma/client").$Enums.Gender | null;
         refreshToken: string | null;
+        openCount: number;
         profileComplete: boolean;
         consultationFee: number | null;
         experienceYears: number | null;

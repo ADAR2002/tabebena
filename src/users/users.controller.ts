@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Query, Request, Delete } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Query, Request, Delete, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UuidParamDto } from '../common/dto/uuid-param.dto';
@@ -17,6 +17,15 @@ export class UsersController {
   @GetProfileDoc()
   async getMe(@Request() req) {
     return this.usersService.getMe(req.user.userId);
+  }
+
+
+  @Post('me/open')
+  @ApiBearerAuth('JWT-auth')
+ @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Increment my account open count' })
+  async incrementMyOpen(@Request() req) {
+    return this.usersService.incrementOpenCount(req.user.userId);
   }
 
   @Get()

@@ -14,11 +14,12 @@ const prisma_module_1 = require("./prisma/prisma.module");
 const database_module_1 = require("./database/database.module");
 const auth_module_1 = require("./auth/auth.module");
 const patients_module_1 = require("./patients/patients.module");
-const visits_module_1 = require("./visits/visits.module");
+const visits_module_1 = require("./users/visits/visits.module");
 const schedule_module_1 = require("./schedule/schedule.module");
 const users_module_1 = require("./users/users.module");
 const doctors_module_1 = require("./doctors/doctors.module");
 const appointments_module_1 = require("./appointments/appointments.module");
+const home_module_1 = require("./home/home.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -39,7 +40,8 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             doctors_module_1.DoctorsModule,
             supabase_module_1.SupabaseModule,
-            appointments_module_1.AppointmentsModule
+            appointments_module_1.AppointmentsModule,
+            home_module_1.HomeModule
         ],
         controllers: [],
         providers: [],

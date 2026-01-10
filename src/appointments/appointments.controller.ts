@@ -46,12 +46,6 @@ export class AppointmentsController {
     );
   }
 
-  /*@Get()
-  @ApiOperation({ summary: "Get all appointments for today" })
-  async findAll(@Request() req) {
-    return await this.appointmentsService.getToday(req.user.userId);
-  }*/
-
   @Get(":id")
   @ApiOperation({ summary: "Get appointment by ID" })
   @ApiParam({ name: "id", description: "Appointment ID" })
@@ -82,14 +76,30 @@ export class AppointmentsController {
   }
 
   @Get()
-  @ApiOperation({ summary: "Get appointments for a specific date" })
+  @ApiOperation({ summary: "Get appointments within a date range" })
   @ApiQuery({
-    name: "date",
+    name: "startDate",
     required: true,
-    description: "Date in ISO format (e.g., 2023-12-25T00:00:00.000Z)",
+    description:
+      "Start date in ISO format (e.g., 2023-12-25T00:00:00.000Z)",
     example: "2023-12-25T00:00:00.000Z",
   })
-  async findByDate(@Request() req, @Query("date") date: string) {
-    return await this.appointmentsService.findByDate(req.user.userId, date);
+  @ApiQuery({
+    name: "endDate",
+    required: true,
+    description:
+      "End date in ISO format (e.g., 2023-12-26T23:59:59.999Z)",
+    example: "2023-12-26T23:59:59.999Z",
+  })
+  async findByRange(
+    @Request() req,
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string
+  ) {
+    return await this.appointmentsService.findByRange(
+      req.user.userId,
+      startDate,
+      endDate
+    );
   }
 }

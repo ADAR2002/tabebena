@@ -5,11 +5,12 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { DatabaseModule } from "./database/database.module";
 import { AuthModule } from "./auth/auth.module";
 import { PatientsModule } from "./patients/patients.module";
-import { VisitsModule } from "./visits/visits.module";
+import { VisitsModule } from "./users/visits/visits.module";
 import { ScheduleModule } from "./schedule/schedule.module";
 import { UsersModule } from "./users/users.module";
 import { DoctorsModule } from "./doctors/doctors.module";
 import { AppointmentsModule } from './appointments/appointments.module';
+import { HomeModule } from './home/home.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { AppointmentsModule } from './appointments/appointments.module';
     UsersModule,
     DoctorsModule,
     SupabaseModule,
-    AppointmentsModule
+    AppointmentsModule,
+    HomeModule
   ],
   controllers: [],
   providers: [],

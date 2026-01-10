@@ -29,9 +29,21 @@ export class DoctorsService {
   }
 
   async findAll(
-    paginationDto: PaginationDto
+    paginationDto: PaginationDto,
+    specialty?: string,
+    name?: string
   ): Promise<PaginatedResponseDto<UserResponseDto>> {
-    const where: Prisma.UserWhereInput = { role: UserRole.DOCTOR };
+    const orName: Prisma.UserWhereInput[] = [];
+    if (name) {
+      orName.push({ firstName: { contains: name } });
+      orName.push({ lastName: { contains: name } });
+    }
+
+    const where: Prisma.UserWhereInput = {
+      role: UserRole.DOCTOR,
+      ...(specialty ? { specialty: { contains: specialty } } : {}),
+      ...(orName.length ? { OR: orName } : {}),
+    };
 
     const [total, doctors] = await Promise.all([
       this.prisma.user.count({ where }),
@@ -67,6 +79,19 @@ export class DoctorsService {
       throw new NotFoundException(`Doctor with ID ${id} not found`);
     }
     return this.mapToDoctorResponse(doctor);
+  }
+
+  async getOpenCount(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    return { openCount: (user as any)?.openCount ?? 0 };
+  }
+
+  async incrementOpenCount(userId: string) {
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: ({ openCount: { increment: 1 } } as any),
+    });
+    return { openCount: (updated as any).openCount ?? 0 };
   }
 }
 

@@ -67,6 +67,7 @@ model User {
   dateOfBirth     DateTime?
   gender          Gender?
   refreshToken    String?
+  openCount       Int         @default(0)
   
   // Relations
   clinicLocation  ClinicLocation?

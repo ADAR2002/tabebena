@@ -27,7 +27,7 @@ import {
   ApiUpdateVisit
 } from './decorators/swagger.decorators';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { ResponseInterceptor, ErrorInterceptor } from '../common/interceptors';
+import { ResponseInterceptor, ErrorInterceptor } from '../../common/interceptors';
 @ApiTags('visits')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(ResponseInterceptor, ErrorInterceptor)
@@ -62,12 +62,14 @@ export class VisitsController {
     description: 'List of patient visits', 
     type: [VisitResponseDto] 
   })
+  /*
   @ApiGetPatientVisitsByPhone()
   getPatientVisitsByPhone(
     @Param('phone') phone: string,
   ): Promise<VisitResponseDto[]> {
     return this.visitsService.getPatientVisits(phone);
   }
+  */
 
   @Patch(':id')
   @ApiUpdateVisit()

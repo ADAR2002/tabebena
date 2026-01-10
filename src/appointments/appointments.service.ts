@@ -92,4 +92,24 @@ export class AppointmentsService {
     });
     return appointments;
   }
+
+  async findByRange(doctorId: string, startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new BadRequestException("Invalid date range");
+    }
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        doctorId: doctorId,
+        dateAndTime: {
+          gte: start,
+          lte: end,
+        },
+      },
+      include: { patient: true },
+      orderBy: { dateAndTime: "asc" },
+    });
+    return appointments;
+  }
 }
