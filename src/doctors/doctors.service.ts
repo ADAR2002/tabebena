@@ -81,10 +81,7 @@ export class DoctorsService {
     return this.mapToDoctorResponse(doctor);
   }
 
-  async getOpenCount(userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    return { openCount: (user as any)?.openCount ?? 0 };
-  }
+  
 
   async incrementOpenCount(userId: string) {
     const updated = await this.prisma.user.update({
