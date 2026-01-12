@@ -12,6 +12,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.enableCors();
+  // Always use the 'api' global prefix so routes match Vercel's /api/* function path
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useStaticAssets(join(__dirname, '..', 'uploads'));
@@ -33,7 +34,8 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
+  const swaggerPath = 'api/docs';
+  SwaggerModule.setup(swaggerPath, app, document, {
     swaggerOptions: {
       persistAuthorization: true,
     },
@@ -44,7 +46,7 @@ async function bootstrap() {
     // eslint-disable-next-line no-console
     console.log(`Application is running on: http://localhost:${port}`);
     // eslint-disable-next-line no-console
-    console.log(`Swagger documentation: http://localhost:${port}/api/docs`);
+    console.log(`Swagger documentation: http://localhost:${port}/${swaggerPath}`);
   }
 
   return app;
