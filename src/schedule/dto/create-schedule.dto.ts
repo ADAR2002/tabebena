@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsEnum, IsDateString, Min, Max, ValidateIf } from 'class-validator';
-import { DayOfWeek } from '@prisma/client';
+import { IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
+import { DayOfWeek, ScheduleEventType } from '@prisma/client';
 
 export class CreateScheduleDto {
   @ApiProperty({
@@ -26,23 +26,7 @@ export class CreateScheduleDto {
   @IsNotEmpty()
   endTime: string;
 
-  @ApiProperty({
-    description: 'Duration of each time slot in minutes',
-    example: 30,
-    minimum: 10,
-    maximum: 60
-  })
-  @IsNumber()
-  @Min(10)
-  @Max(60)
-  @IsNotEmpty()
-  slotDuration: number;
-
-  @ApiProperty({
-    description: 'Whether the schedule is active',
-    example: true,
-    required: false
-  })
-  @ValidateIf(o => o.isActive !== undefined)
-  isActive?: boolean;
+  @IsEnum(ScheduleEventType)
+  @IsOptional()
+  eventType?: ScheduleEventType;
 }

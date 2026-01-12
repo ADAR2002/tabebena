@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DayOfWeek } from '@prisma/client';
+import { DayOfWeek, ScheduleEventType } from '@prisma/client';
 
 export class ScheduleResponseDto {
   @ApiProperty({
@@ -22,28 +22,30 @@ export class ScheduleResponseDto {
   dayOfWeek: DayOfWeek;
 
   @ApiProperty({
-    description: 'Start time',
-    example: '2023-01-01T09:00:00.000Z'
+    description: 'Start time in HH:mm',
+    example: '08:00'
   })
-  startTime: Date;
+  startTime: string;
 
   @ApiProperty({
-    description: 'End time',
-    example: '2023-01-01T17:00:00.000Z'
+    description: 'End time in HH:mm',
+    example: '10:00'
   })
-  endTime: Date;
+  endTime: string;
 
   @ApiProperty({
-    description: 'Duration of each time slot in minutes',
-    example: 30
+    description: 'Type of this interval',
+    enum: ScheduleEventType,
+    example: 'WORK'
   })
-  slotDuration: number;
+  eventType: ScheduleEventType;
 
   @ApiProperty({
-    description: 'Whether the schedule is active',
-    example: true
+    description: 'Is this interval a day off?',
+    example: false
   })
-  isActive: boolean;
+  isDayOff: boolean;
+  
 
   @ApiProperty({
     description: 'Creation timestamp',

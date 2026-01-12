@@ -25,8 +25,8 @@ import {
   ApiDeleteSchedule,
   ApiFindAllSchedules,
   ApiFindScheduleById,
-  ApiFindSchedulesByDay,
-  ApiUpdateSchedule
+  ApiUpdateSchedule,
+  ApiToggleDayOff
 } from './decorators/swagger.decorators';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -56,11 +56,16 @@ export class ScheduleController {
     return this.scheduleService.findOne(id, req.user.userId);
   }
 
-  @Get('day/:dayOfWeek')
-  @ApiFindSchedulesByDay()
-  findByDay(@Param('dayOfWeek') dayOfWeek: DayOfWeek, @Request() req: any): Promise<ScheduleResponseDto[]> {
-    return this.scheduleService.getScheduleByDay(dayOfWeek, req.user.userId);
+  @Patch('day-off/toggle')
+  @ApiToggleDayOff()
+  @HttpCode(HttpStatus.OK)
+  toggleDayOff(
+    @Body('dayOfWeek') dayOfWeek: DayOfWeek,
+    @Request() req: any,
+  ): Promise<{ userId: string; dayOfWeek: DayOfWeek; isDayOff: boolean; count: number }> {
+    return this.scheduleService.toggleDayOffForDay(req.user.userId, dayOfWeek);
   }
+
 
   @Patch(':id')
   @ApiUpdateSchedule()

@@ -13,32 +13,30 @@ import { DayOfWeek } from '@prisma/client';
 
 // Create Schedule
 const CreateScheduleOperation = {
-  summary: 'Add a new schedule day',
-  description: 'Creates a new doctor schedule for a specific day of the week.'
+  summary: 'Add a new schedule interval',
+  description: 'Creates a new interval (WORK or BREAK) for a specific day of the week.'
 };
 
 const CreateScheduleBody = {
   type: CreateScheduleDto,
-  description: 'Schedule details to create',
+  description: 'Interval details to create',
   examples: {
-    basic: {
-      summary: 'Basic schedule',
+    work: {
+      summary: 'WORK interval',
       value: {
         dayOfWeek: 'MONDAY',
-        startTime: '09:00',
-        endTime: '17:00',
-        slotDuration: 30,
-        isActive: true
+        startTime: '08:00',
+        endTime: '10:00',
+        eventType: 'WORK'
       }
     },
-    halfDay: {
-      summary: 'Half day schedule',
+    break: {
+      summary: 'BREAK interval',
       value: {
-        dayOfWeek: 'SATURDAY',
-        startTime: '09:00',
-        endTime: '13:00',
-        slotDuration: 20,
-        isActive: true
+        dayOfWeek: 'MONDAY',
+        startTime: '10:00',
+        endTime: '10:30',
+        eventType: 'BREAK'
       }
     }
   }
@@ -46,31 +44,25 @@ const CreateScheduleBody = {
 
 // Update Schedule
 const UpdateScheduleOperation = {
-  summary: 'Update a schedule day',
-  description: 'Updates an existing doctor schedule with the provided data.'
+  summary: 'Update a schedule interval',
+  description: 'Updates an existing schedule interval with the provided data.'
 };
 
 const UpdateScheduleBody = {
   type: UpdateScheduleDto,
-  description: 'Schedule data to update',
+  description: 'Interval data to update',
   examples: {
     timeChange: {
       summary: 'Update time range',
       value: {
-        startTime: '08:00',
-        endTime: '16:00'
+        startTime: '09',
+        endTime: '11'
       }
     },
-    slotDuration: {
-      summary: 'Update slot duration',
+    changeType: {
+      summary: 'Change event type',
       value: {
-        slotDuration: 15
-      }
-    },
-    deactivate: {
-      summary: 'Deactivate schedule',
-      value: {
-        isActive: false
+        eventType: 'BREAK'
       }
     }
   }
@@ -105,7 +97,7 @@ export function ApiCreateSchedule() {
     }),
     ApiResponse({ 
       status: 400, 
-      description: 'Bad request - Invalid time range or slot duration' 
+      description: 'Bad request - Invalid time range' 
     }),
     ApiResponse({ 
       status: 409, 
@@ -153,19 +145,24 @@ export function ApiFindScheduleById() {
   );
 }
 
-export function ApiFindSchedulesByDay() {
+export function ApiToggleDayOff() {
   return applyDecorators(
     ApiBearerAuth('JWT-auth'),
-    ApiOperation({ 
-      summary: 'Get schedules by day of week',
-      description: 'Retrieves all active schedules for a specific day of the week.'
+    ApiOperation({
+      summary: 'Toggle day off for a schedule',
+      description: 'Toggles the isDayOff flag for a specific day.'
     }),
-    ApiParam(DayOfWeekParam),
-    ApiResponse({ 
-      status: 200, 
-      description: 'Schedules for the specified day', 
-      type: [ScheduleResponseDto] 
-    })
+    ApiBody({
+      description: 'Day of week to toggle for the user (ID is userId)',
+      schema: {
+        type: 'object',
+        properties: {
+          dayOfWeek: { type: 'string', enum: Object.keys(DayOfWeek), example: 'MONDAY' }
+        },
+        required: ['dayOfWeek']
+      }
+    }),
+    ApiResponse({ status: 200, description: 'Day off toggled' })
   );
 }
 
@@ -182,7 +179,7 @@ export function ApiUpdateSchedule() {
     }),
     ApiResponse({ 
       status: 400, 
-      description: 'Bad request - Invalid time range or slot duration' 
+      description: 'Bad request - Invalid time range' 
     }),
     ApiResponse({ 
       status: 404, 

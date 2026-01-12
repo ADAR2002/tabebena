@@ -1,30 +1,43 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateScheduleDto } from './dto/create-schedule.dto';
-import { UpdateScheduleDto } from './dto/update-schedule.dto';
-import { ScheduleResponseDto } from './dto/schedule-response.dto';
-import { DayOfWeek } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateScheduleDto } from "./dto/create-schedule.dto";
+import { UpdateScheduleDto } from "./dto/update-schedule.dto";
+import { ScheduleResponseDto } from "./dto/schedule-response.dto";
+import { DayOfWeek, ScheduleEventType } from "@prisma/client";
 
 @Injectable()
 export class ScheduleService {
   constructor(private prisma: PrismaService) {}
+
+  private formatTime(date: Date): string {
+    const h = date.getHours().toString().padStart(2, "0");
+    const m = date.getMinutes().toString().padStart(2, "0");
+    return `${h}:${m}`;
+  }
 
   private mapToResponse(schedule: any): ScheduleResponseDto {
     return {
       id: schedule.id,
       userId: schedule.userId,
       dayOfWeek: schedule.dayOfWeek,
-      startTime: schedule.startTime,
-      endTime: schedule.endTime,
-      slotDuration: schedule.slotDuration,
-      isActive: schedule.isActive,
+      startTime: this.formatTime(schedule.startTime),
+      endTime: this.formatTime(schedule.endTime),
+      isDayOff: schedule.isDayOff,
+      eventType: schedule.eventType,
       createdAt: schedule.createdAt,
       updatedAt: schedule.updatedAt,
     };
   }
 
   private parseTimeToDateTime(timeString: string): Date {
-    const [hours, minutes] = timeString.split(':').map(Number);
+    const parts = timeString.split(":");
+    const hours = Number(parts[0]);
+    const minutes = parts.length > 1 ? Number(parts[1]) : 0;
     const date = new Date();
     date.setHours(hours, minutes, 0, 0);
     return date;
@@ -33,37 +46,57 @@ export class ScheduleService {
   private validateTimeRange(startTime: string, endTime: string): void {
     const start = this.parseTimeToDateTime(startTime);
     const end = this.parseTimeToDateTime(endTime);
-    
+
     if (end <= start) {
-      throw new BadRequestException('endTime must be greater than startTime');
+      throw new BadRequestException("endTime must be greater than startTime");
     }
   }
 
-  async create(createScheduleDto: CreateScheduleDto, userId: string): Promise<ScheduleResponseDto> {
-    this.validateTimeRange(createScheduleDto.startTime, createScheduleDto.endTime);
-
-    const existingSchedule = await this.prisma.doctorSchedule.findFirst({
-      where: {
-        userId: userId,
-        dayOfWeek: createScheduleDto.dayOfWeek,
-      },
-    });
-
-    if (existingSchedule) {
-      throw new ConflictException(`Schedule for ${createScheduleDto.dayOfWeek} already exists`);
-    }
+  async create(
+    createScheduleDto: CreateScheduleDto,
+    userId: string
+  ): Promise<ScheduleResponseDto> {
+    this.validateTimeRange(
+      createScheduleDto.startTime,
+      createScheduleDto.endTime
+    );
 
     const startTime = this.parseTimeToDateTime(createScheduleDto.startTime);
     const endTime = this.parseTimeToDateTime(createScheduleDto.endTime);
 
+    const overlap = await this.prisma.doctorSchedule.findFirst({
+      where: {
+        userId,
+        dayOfWeek: createScheduleDto.dayOfWeek,
+        startTime: { lt: endTime },
+        endTime: { gt: startTime },
+      },
+    });
+    if (overlap) {
+      throw new ConflictException(
+        "Interval overlaps with an existing interval"
+      );
+    }
+    let dayOff = false;
+
+    const eventType = await this.prisma.doctorSchedule.findFirst({
+      where: {
+        userId: userId,
+        dayOfWeek: createScheduleDto.dayOfWeek,
+        isDayOff: true,
+      },
+    });
+    if (eventType) {
+      dayOff = true;
+    }
     const schedule = await this.prisma.doctorSchedule.create({
       data: {
         userId: userId,
         dayOfWeek: createScheduleDto.dayOfWeek,
         startTime: startTime,
         endTime: endTime,
-        slotDuration: createScheduleDto.slotDuration,
-        isActive: createScheduleDto.isActive ?? true,
+        isDayOff: dayOff,
+        eventType: createScheduleDto.eventType ?? ScheduleEventType.WORK,
       },
     });
 
@@ -72,11 +105,8 @@ export class ScheduleService {
 
   async findAll(userId: string): Promise<ScheduleResponseDto[]> {
     const schedules = await this.prisma.doctorSchedule.findMany({
-      where: { userId },
-      orderBy: [
-        { dayOfWeek: 'asc' },
-        { startTime: 'asc' },
-      ],
+      where: { userId},
+      orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
     });
 
     return schedules.map((schedule) => this.mapToResponse(schedule));
@@ -97,39 +127,49 @@ export class ScheduleService {
   async update(
     id: string,
     updateScheduleDto: UpdateScheduleDto,
-    userId: string,
+    userId: string
   ): Promise<ScheduleResponseDto> {
     const existingSchedule = await this.findOne(id, userId);
 
-    if (updateScheduleDto.dayOfWeek && updateScheduleDto.dayOfWeek !== existingSchedule.dayOfWeek) {
-      const conflictSchedule = await this.prisma.doctorSchedule.findFirst({
-        where: {
-          userId: userId,
-          dayOfWeek: updateScheduleDto.dayOfWeek,
-          id: { not: id },
-        },
-      });
+    const targetDay = updateScheduleDto.dayOfWeek ?? existingSchedule.dayOfWeek;
 
-      if (conflictSchedule) {
-        throw new ConflictException(`Schedule for ${updateScheduleDto.dayOfWeek} already exists`);
-      }
-    }
+    const startTime = updateScheduleDto.startTime || existingSchedule.startTime;
+    const endTime = updateScheduleDto.endTime || existingSchedule.endTime;
 
-    const startTime = updateScheduleDto.startTime || existingSchedule.startTime.toTimeString().slice(0, 5);
-    const endTime = updateScheduleDto.endTime || existingSchedule.endTime.toTimeString().slice(0, 5);
-    
     if (updateScheduleDto.startTime || updateScheduleDto.endTime) {
       this.validateTimeRange(startTime, endTime);
     }
 
     const updateData: any = { ...updateScheduleDto };
-    
+
     if (updateScheduleDto.startTime) {
-      updateData.startTime = this.parseTimeToDateTime(updateScheduleDto.startTime);
+      updateData.startTime = this.parseTimeToDateTime(
+        updateScheduleDto.startTime
+      );
     }
-    
+
     if (updateScheduleDto.endTime) {
       updateData.endTime = this.parseTimeToDateTime(updateScheduleDto.endTime);
+    }
+
+    const newStart: Date =
+      updateData.startTime ??
+      this.parseTimeToDateTime(existingSchedule.startTime);
+    const newEnd: Date =
+      updateData.endTime ?? this.parseTimeToDateTime(existingSchedule.endTime);
+    const overlap = await this.prisma.doctorSchedule.findFirst({
+      where: {
+        userId,
+        dayOfWeek: targetDay,
+        id: { not: id },
+        startTime: { lt: newEnd },
+        endTime: { gt: newStart },
+      },
+    });
+    if (overlap) {
+      throw new ConflictException(
+        "Updated interval overlaps with an existing interval"
+      );
     }
 
     const updatedSchedule = await this.prisma.doctorSchedule.update({
@@ -150,16 +190,29 @@ export class ScheduleService {
     return `Schedule with ID ${id} has been successfully deleted`;
   }
 
-  async getScheduleByDay(dayOfWeek: DayOfWeek, userId: string): Promise<ScheduleResponseDto[]> {
-    const schedules = await this.prisma.doctorSchedule.findMany({
-      where: {
-        userId: userId,
-        dayOfWeek: dayOfWeek,
-        isActive: true,
-      },
-      orderBy: { startTime: 'asc' },
+  async toggleDayOffForDay(
+    targetUserId: string,
+    dayOfWeek: DayOfWeek
+  ): Promise<{
+    userId: string;
+    dayOfWeek: DayOfWeek;
+    isDayOff: boolean;
+    count: number;
+  }> {
+    const anyOff = await this.prisma.doctorSchedule.findFirst({
+      where: { userId: targetUserId, dayOfWeek, isDayOff: true },
+      select: { id: true },
     });
-
-    return schedules.map((schedule) => this.mapToResponse(schedule));
+    const newState = !Boolean(anyOff);
+    const result = await this.prisma.doctorSchedule.updateMany({
+      where: { userId: targetUserId, dayOfWeek },
+      data: { isDayOff: newState },
+    });
+    return {
+      userId: targetUserId,
+      dayOfWeek,
+      isDayOff: newState,
+      count: result.count,
+    };
   }
 }
